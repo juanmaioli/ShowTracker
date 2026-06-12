@@ -12,7 +12,8 @@ router.get('/', (req, res) => {
         s.name, 
         s.image, 
         s.status,
-        s.score,
+        s.score as tvdb_score,
+        COALESCE((SELECT AVG(rating) FROM season_ratings WHERE series_id = s.id), 0.0) as user_score,
         COUNT(e.id) as total_episodes,
         SUM(CASE WHEN e.watched = 1 THEN 1 ELSE 0 END) as watched_episodes,
         MIN(CASE WHEN e.season_number > 0 AND e.air_date IS NOT NULL AND e.air_date != '' THEN e.air_date ELSE NULL END) as first_air_date

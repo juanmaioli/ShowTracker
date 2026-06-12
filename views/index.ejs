@@ -54,7 +54,7 @@
     </div>
   </div>
 <% } else { %>
-  <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+  <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
     <% shows.forEach(show => { %>
       <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
       <div class="col" data-completed="<%= percentage === 100 %>">
@@ -63,11 +63,23 @@
           <a href="/series/<%= show.id %>" class="d-block text-decoration-none">
             <div class="poster-container" style="aspect-ratio: 2/3;">
               <img src="<%= show.image %>" class="w-100 h-100 object-fit-cover poster-image" alt="<%= show.name %>" onerror="this.src='/img/placeholder.svg';">
-              <span class="position-absolute top-2 start-2 badge bg-dark bg-opacity-75 rounded-pill border border-secondary border-opacity-50" style="font-size: 0.75rem; z-index: 2;">
-                ⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %>
+              
+              <!-- Triángulo púrpura en la esquina superior izquierda -->
+              <div class="position-absolute top-0 start-0" style="width: 56px; height: 56px; background: linear-gradient(to bottom right, var(--bs-purple) 50%, transparent 50%); z-index: 1;" title="Calificación propia"></div>
+              
+              <!-- Calificación propia del usuario sobre el triángulo -->
+              <span class="position-absolute text-white fw-bold d-flex align-items-center gap-1" style="top: 8px; left: 4px; font-size: 0.75rem; z-index: 2; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); transform: rotate(-45deg);" title="Tu calificación: <%= show.user_score.toFixed(1) %>">
+                ⭐<%= show.user_score.toFixed(1) %>
               </span>
+
               <% if (percentage === 100) { %>
+                <!-- Triángulo verde en la esquina superior derecha -->
                 <div class="position-absolute top-0 end-0" style="width: 64px; height: 64px; background: linear-gradient(to bottom left, var(--bs-success) 50%, transparent 50%); z-index: 2;" title="Serie completada"></div>
+                
+                <!-- Texto 100% inclinado sobre el triángulo -->
+                <span class="position-absolute text-white fw-bold" style="top: 8px; right: 4px; font-size: 0.75rem; z-index: 3; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); transform: rotate(45deg);" title="Serie completada al 100%">
+                  100%
+                </span>
               <% } %>
             </div>
           </a>
