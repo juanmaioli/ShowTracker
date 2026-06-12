@@ -233,36 +233,72 @@ router.post('/seguir', async (req, res) => {
         VALUES (?, ?, ?)
       `);
 
-      // Descargar y guardar posters
+      // Descargar y guardar posters (en lotes de 8 en paralelo para evitar timeout y saturación de red)
       const posters = series.artworks.filter(art => 
         art.type === 2 || String(art.type).toLowerCase() === 'poster'
       );
 
-      for (let i = 0; i < posters.length; i++) {
-        const art = posters[i];
-        const artUrl = art.image || art.thumbnail;
-        if (artUrl) {
-          const filenameId = `${id}-poster-${art.id || i}`;
-          const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'posters');
-          insertArtwork.run(id, 'poster', localArtPath);
-        }
+      const downloadedPosters = [];
+      const posterChunks = [];
+      for (let i = 0; i < posters.length; i += 8) {
+        posterChunks.push(posters.slice(i, i + 8));
       }
 
-      // Descargar y guardar backgrounds
+      for (let c = 0; c < posterChunks.length; c++) {
+        const chunk = posterChunks[c];
+        await Promise.all(chunk.map(async (art, idx) => {
+          const absoluteIndex = c * 8 + idx;
+          const artUrl = art.image || art.thumbnail;
+          if (artUrl) {
+            try {
+              const filenameId = `${id}-poster-${art.id || absoluteIndex}`;
+              const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'posters');
+              downloadedPosters.push(localArtPath);
+            } catch (err) {
+              console.error(`Error descargando poster ${absoluteIndex} para serie ${id}:`, err.message);
+            }
+          }
+        }));
+      }
+
+      // Insertar secuencialmente en DB
+      for (const localArtPath of downloadedPosters) {
+        insertArtwork.run(id, 'poster', localArtPath);
+      }
+
+      // Descargar y guardar backgrounds (en lotes de 8 en paralelo)
       const backgrounds = series.artworks.filter(art => 
         art.type === 3 || 
         String(art.type).toLowerCase() === 'background' || 
         String(art.type).toLowerCase() === 'fanart'
       );
 
-      for (let i = 0; i < backgrounds.length; i++) {
-        const art = backgrounds[i];
-        const artUrl = art.image || art.thumbnail;
-        if (artUrl) {
-          const filenameId = `${id}-bg-${art.id || i}`;
-          const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'backgrounds');
-          insertArtwork.run(id, 'background', localArtPath);
-        }
+      const downloadedBackgrounds = [];
+      const bgChunks = [];
+      for (let i = 0; i < backgrounds.length; i += 8) {
+        bgChunks.push(backgrounds.slice(i, i + 8));
+      }
+
+      for (let c = 0; c < bgChunks.length; c++) {
+        const chunk = bgChunks[c];
+        await Promise.all(chunk.map(async (art, idx) => {
+          const absoluteIndex = c * 8 + idx;
+          const artUrl = art.image || art.thumbnail;
+          if (artUrl) {
+            try {
+              const filenameId = `${id}-bg-${art.id || absoluteIndex}`;
+              const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'backgrounds');
+              downloadedBackgrounds.push(localArtPath);
+            } catch (err) {
+              console.error(`Error descargando background ${absoluteIndex} para serie ${id}:`, err.message);
+            }
+          }
+        }));
+      }
+
+      // Insertar secuencialmente en DB
+      for (const localArtPath of downloadedBackgrounds) {
+        insertArtwork.run(id, 'background', localArtPath);
       }
     }
 
@@ -274,22 +310,32 @@ router.post('/seguir', async (req, res) => {
       `);
 
       const characters = series.characters.slice(0, 12);
+      const downloadedCast = [];
 
-      for (let i = 0; i < characters.length; i++) {
-        const char = characters[i];
+      await Promise.all(characters.map(async (char, i) => {
         const actorName = char.personName || 'Actor Desconocido';
         const charName = char.name || 'Personaje Desconocido';
         const imgUrl = char.image || char.personImgURL;
         
         let localCastImgPath = null;
         if (imgUrl) {
-          const filenameId = `${id}-actor-${char.id || i}`;
-          localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
+          try {
+            const filenameId = `${id}-actor-${char.id || i}`;
+            localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
+          } catch (err) {
+            console.error(`Error descargando imagen de actor ${actorName} para serie ${id}:`, err.message);
+            localCastImgPath = '/img/cast-placeholder.svg';
+          }
         } else {
           localCastImgPath = '/img/cast-placeholder.svg';
         }
 
-        insertCast.run(id, actorName, charName, localCastImgPath, char.sort || i);
+        downloadedCast.push({ actorName, charName, localCastImgPath, sort: char.sort || i });
+      }));
+
+      // Insertar en la DB
+      for (const item of downloadedCast) {
+        insertCast.run(id, item.actorName, item.character_name || item.charName, item.localCastImgPath, item.sort);
       }
     }
 

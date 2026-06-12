@@ -108,17 +108,40 @@ async function getSeriesTranslation(id, lang) {
   }
 }
 
-// Obtener episodios oficiales de una serie en un idioma específico
+// Obtener episodios oficiales de una serie en un idioma específico (con soporte para paginación)
 async function getSeriesEpisodes(id, lang) {
   const client = await getApiClient();
-  registerApiCall(`/series/${id}/episodes/official/${lang}`);
-  try {
-    const response = await client.get(`/series/${id}/episodes/official/${lang}`);
-    return response.data.data.episodes || [];
-  } catch (error) {
-    console.warn(`Error al obtener episodios oficiales en ${lang} para la serie ${id}:`, error.message);
-    return null;
+  let allEpisodes = [];
+  let page = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    registerApiCall(`/series/${id}/episodes/official/${lang}?page=${page}`);
+    try {
+      const response = await client.get(`/series/${id}/episodes/official/${lang}`, {
+        params: { page: page }
+      });
+      const episodes = response.data.data.episodes || [];
+      if (episodes.length === 0) {
+        hasMore = false;
+      } else {
+        allEpisodes = allEpisodes.concat(episodes);
+        // El tamaño de página por defecto de TheTVDB v4 es de 500 episodios.
+        // Si viene menos de ese tamaño, sabemos de antemano que es la última página.
+        if (episodes.length < 500) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+    } catch (error) {
+      console.warn(`Error al obtener episodios oficiales en ${lang} para la serie ${id} (página ${page}):`, error.message);
+      hasMore = false;
+      if (allEpisodes.length === 0) return null;
+    }
   }
+
+  return allEpisodes;
 }
 
 // Obtener información extendida de una serie (incluye traducción y episodios localizados)

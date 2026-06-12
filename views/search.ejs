@@ -326,8 +326,8 @@
       // Guardar cola localmente para el bucle
       const queueToImport = [...importQueue];
       
-      // Procesar en paralelo
-      const promises = queueToImport.map(async (item) => {
+      // Procesar secuencialmente (uno por uno) para evitar bloqueos en la base de datos SQLite
+      for (const item of queueToImport) {
         const id = item.id;
         const name = item.name;
 
@@ -343,9 +343,16 @@
             body: JSON.stringify({ tvdbId: id, json: true })
           });
 
-          await response.json();
+          if (!response.ok) {
+            throw new Error(`Respuesta HTTP del servidor: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          if (!data.success) {
+            throw new Error(data.error || 'Error desconocido del servidor');
+          }
         } catch (err) {
-          console.error(`Error importando ${name}:`, err);
+          console.error(`Error importando la serie ${name}:`, err.message);
         } finally {
           completedCount++;
           const pct = Math.round((completedCount / total) * 100);
@@ -353,10 +360,7 @@
           progressPercentText.innerText = `${pct}%`;
           progressStatusText.innerText = `Importando ${completedCount} de ${total} series en segundo plano...`;
         }
-      });
-
-      // Esperar a que terminen todas
-      await Promise.all(promises);
+      }
 
       // Limpiar cola en localStorage y memoria tras completarse
       importQueue = [];
