@@ -7,7 +7,7 @@
       <div class="row align-items-center">
         <div class="col-md-8 mb-3 mb-md-0">
           <h1 class="fw-black mb-2 text-gradient">📺 Mi Biblioteca</h1>
-          <p class="text-secondary mb-0">Haciendo seguimiento de <strong><%= stats.totalShows %></strong> series y <strong><%= stats.totalWatched %></strong> / <strong><%= stats.totalEpisodes %></strong> episodios vistos.</p>
+          <p class="mb-0">Haciendo seguimiento de <strong><%= stats.totalShows %></strong> series y <strong><%= stats.totalWatched %></strong> / <strong><%= stats.totalEpisodes %></strong> episodios vistos.</p>
         </div>
         <div class="col-md-4 text-md-end">
           <a href="/series/buscar" class="btn btn-primary btn-lg rounded-pill px-4 shadow">
@@ -18,7 +18,7 @@
       
       <% if (stats.totalEpisodes > 0) { %>
         <div class="mt-4">
-          <div class="d-flex justify-content-between mb-1 small fw-semibold text-secondary">
+          <div class="d-flex justify-content-between mb-1 small fw-semibold">
             <span>Progreso General de Visualización</span>
             <span><%= stats.overallProgress %>%</span>
           </div>
@@ -47,9 +47,9 @@
 <% if (shows.length === 0) { %>
   <div class="row my-5">
     <div class="col-12 text-center py-5">
-      <div class="display-3 text-secondary mb-3">🔍</div>
+      <div class="display-3 mb-3">🔍</div>
       <h3>¿No sabés qué ver?</h3>
-      <p class="text-secondary mb-4">Comenzá a seguir tu primera serie haciendo una búsqueda en TheTVDB.</p>
+      <p class="mb-4">Comenzá a seguir tu primera serie haciendo una búsqueda en TheTVDB.</p>
       <a href="/series/buscar" class="btn btn-outline-primary rounded-pill px-4">Buscar Series</a>
     </div>
   </div>
@@ -92,7 +92,7 @@
             
             <div class="mt-auto">
               <!-- Progreso de la serie -->
-              <div class="d-flex justify-content-between mb-1 small text-secondary">
+              <div class="d-flex justify-content-between mb-1 small">
                 <span><%= show.watched_episodes %> / <%= show.total_episodes %> epis.</span>
                 <span><%= percentage %>%</span>
               </div>

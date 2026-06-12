@@ -38,7 +38,7 @@
           <span class="badge <%= statusClass %> rounded-pill"><%= statusText %></span>
           <span class="badge bg-purple text-white rounded-pill series-score-badge">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
         </div>
-        <p class="text-white-50 small mb-3">ID de TheTVDB: <%= show.id %></p>
+        <p class="text-white-50 small mb-3">ID de TheTVDB: <a href="https://thetvdb.com/series/<%= show.slug %>" target="_blank" class="text-white-50 text-decoration-underline"><%= show.id %></a></p>
         <p class="lead text-light text-shadow opacity-90 mb-0"><%= show.overview %></p>
       </div>
     </div>
@@ -101,7 +101,7 @@
           <span class="badge <%= statusClassStr %> rounded-pill"><%= statusTextStr %></span>
           <span class="badge text-purple rounded-pill series-score-badge" style="background-color: var(--bs-purple-alt) !important;">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
         </div>
-        <p class="text-secondary small">ID de TheTVDB: <%= show.id %></p>
+        <p class="small">ID de TheTVDB: <a href="https://thetvdb.com/series/<%= show.slug %>" target="_blank" class="text-decoration-underline"><%= show.id %></a></p>
         <p class="lead text-secondary-emphasis"><%= show.overview %></p>
       </div>
 
@@ -147,7 +147,7 @@
         <span class="fw-semibold small text-truncate d-block mt-2" title="<%= actor.actor_name %>">
           <%= actor.actor_name %>
         </span>
-        <span class="text-secondary small text-truncate d-block" title="<%= actor.character_name %>" style="font-size: 0.75rem;">
+        <span class="small text-truncate d-block" title="<%= actor.character_name %>" style="font-size: 0.75rem;">
           <%= actor.character_name %>
         </span>
       </div>
@@ -226,11 +226,11 @@
                       Episodio <%= ep.episode_number %>: <%= ep.name %>
                     </label>
                     <% if (ep.air_date) { %>
-                      <span class="text-secondary small"><%= ep.air_date %></span>
+                      <span class="small"><%= ep.air_date %></span>
                     <% } %>
                   </div>
                   <% if (ep.overview) { %>
-                    <p class="text-secondary small mb-0 mt-1"><%= ep.overview %></p>
+                    <p class="small mb-0 mt-1"><%= ep.overview %></p>
                   <% } %>
                 </div>
               </div>
