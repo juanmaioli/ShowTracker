@@ -284,29 +284,40 @@
   <div class="tab-content" id="galleryTabsContent">
     <% if (artworks.backgrounds && artworks.backgrounds.length > 0) { %>
       <div class="tab-pane fade show active" id="bg-tab-pane" role="tabpanel" aria-labelledby="bg-tab" tabindex="0">
-        <!-- Carrusel de Backgrounds (Achicado y centrado, sin recortar imágenes) -->
-        <div id="carouselBackgrounds" class="carousel slide carousel-fade rounded-3 overflow-hidden shadow mx-auto" data-bs-ride="carousel" style="max-width: 750px;">
-          <div class="carousel-inner rounded-3" style="height: 380px;">
-            <% artworks.backgrounds.forEach((bg, idx) => { %>
-              <div class="carousel-item <%= idx === 0 ? 'active' : '' %> bg-black bg-opacity-25" style="height: 380px;">
-                <a href="<%= bg %>" target="_blank" title="Abrir fondo en una nueva pestaña" class="d-block w-100 h-100 cursor-zoom">
-                  <img src="<%= bg %>" class="d-block w-100 h-100 object-fit-contain" alt="Fondo de <%= show.name %>">
-                </a>
-              </div>
-            <% }) %>
+        <style>
+          .thumbnail-wrapper img {
+            transition: opacity 0.2s ease;
+          }
+          .thumbnail-wrapper:hover img {
+            opacity: 1 !important;
+          }
+          .cursor-zoom {
+            cursor: zoom-in;
+          }
+        </style>
+        
+        <!-- Visor Interactivo de Fondos de Pantalla -->
+        <div class="d-flex flex-column align-items-center">
+          <div class="main-bg-viewer rounded-4 overflow-hidden shadow mb-4 bg-black bg-opacity-25 border border-secondary border-opacity-10 position-relative w-100" style="max-width: 800px; aspect-ratio: 16/9;">
+            <a href="<%= artworks.backgrounds[0] %>" id="main-bg-link" target="_blank" title="Abrir fondo en tamaño completo en pestaña nueva" class="d-block w-100 h-100 cursor-zoom">
+              <img id="main-bg-img" src="<%= artworks.backgrounds[0] %>" class="w-100 h-100 object-fit-contain" alt="Fondo de <%= show.name %>" style="transition: opacity 0.2s ease;">
+            </a>
           </div>
+          
+          <% if (artworks.backgrounds.length > 1) { %>
+            <!-- Tira de Miniaturas -->
+            <div class="d-flex gap-2 overflow-x-auto w-100 pb-2 px-1 justify-content-start" style="max-width: 800px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+              <% artworks.backgrounds.forEach((bg, idx) => { %>
+                <div class="thumbnail-wrapper rounded-3 overflow-hidden border cursor-pointer bg-dark transition-all <%= idx === 0 ? 'border-primary border-2 shadow' : 'border-secondary border-opacity-25' %>" 
+                     style="width: 120px; aspect-ratio: 16/9; flex-shrink: 0; transition: all 0.2s ease;"
+                     onclick="selectBackground('<%= bg %>', this)"
+                     title="Ver fondo <%= idx + 1 %>">
+                  <img src="<%= bg %>" class="w-100 h-100 object-fit-cover <%= idx === 0 ? 'opacity-100' : 'opacity-70' %>" alt="Miniatura <%= idx + 1 %>">
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
         </div>
-        <% if (artworks.backgrounds.length > 1) { %>
-          <!-- Controles de navegación posicionados debajo de la imagen -->
-          <div class="d-flex justify-content-center gap-3 mt-3">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="prev">
-              ◀️ Anterior
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="next">
-              Siguiente ▶️
-            </button>
-          </div>
-        <% } %>
       </div>
     <% } %>
 
@@ -331,6 +342,70 @@
 <% } %>
 
 <script>
+  // Cambiar visor de imagen de fondo
+  function selectBackground(bgUrl, thumbElement) {
+    const mainImg = document.getElementById('main-bg-img');
+    const mainLink = document.getElementById('main-bg-link');
+    if (!mainImg || !mainLink) return;
+
+    mainImg.style.opacity = '0';
+    setTimeout(() => {
+      mainImg.src = bgUrl;
+      mainLink.href = bgUrl;
+      mainImg.style.opacity = '1';
+    }, 150);
+
+    const wrappers = document.querySelectorAll('.thumbnail-wrapper');
+    wrappers.forEach(w => {
+      w.classList.remove('border-primary', 'border-2', 'shadow');
+      w.classList.add('border-secondary', 'border-opacity-25');
+      const img = w.querySelector('img');
+      if (img) img.classList.remove('opacity-100');
+      if (img) img.classList.add('opacity-70');
+    });
+
+    thumbElement.classList.add('border-primary', 'border-2', 'shadow');
+    thumbElement.classList.remove('border-secondary', 'border-opacity-25');
+    const activeImg = thumbElement.querySelector('img');
+    if (activeImg) {
+      activeImg.classList.add('opacity-100');
+      activeImg.classList.remove('opacity-70');
+    }
+  }
+
+  // Navegación por teclado (Flechas Izquierda / Derecha) para la galería de fondos
+  document.addEventListener('keydown', (e) => {
+    // Solo si la pestaña de fondos está activa
+    const bgTab = document.getElementById('bg-tab');
+    if (bgTab && bgTab.classList.contains('active')) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const wrappers = Array.from(document.querySelectorAll('.thumbnail-wrapper'));
+        if (wrappers.length <= 1) return;
+
+        // Encontrar índice activo basándonos en la presencia de la clase border-primary
+        const activeIdx = wrappers.findIndex(w => w.classList.contains('border-primary'));
+        if (activeIdx === -1) return;
+
+        // Prevenir el scroll por defecto de la página cuando se presionan las flechas
+        e.preventDefault();
+
+        let nextIdx;
+        if (e.key === 'ArrowRight') {
+          nextIdx = (activeIdx + 1) % wrappers.length;
+        } else {
+          nextIdx = (activeIdx - 1 + wrappers.length) % wrappers.length;
+        }
+
+        const nextThumb = wrappers[nextIdx];
+        if (nextThumb) {
+          nextThumb.click();
+          // Asegurar scroll automático de la miniatura dentro de su tira
+          nextThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
+      }
+    }
+  });
+
   // Manejar toggle de episodios individuales
   document.querySelectorAll('.episode-checkbox').forEach(chk => {
     chk.addEventListener('change', async (e) => {
