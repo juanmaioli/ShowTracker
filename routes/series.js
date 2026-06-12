@@ -180,6 +180,9 @@ router.post('/seguir', async (req, res) => {
     // Verificar si ya se sigue
     const existing = db.prepare('SELECT id FROM series WHERE id = ?').get(id);
     if (existing) {
+      if (req.headers.accept?.includes('json') || req.body.json === 'true' || req.body.json === true) {
+        return res.json({ success: true, seriesId: id, alreadyFollowed: true });
+      }
       return res.redirect(`/series/${id}`);
     }
 
@@ -316,9 +319,15 @@ router.post('/seguir', async (req, res) => {
 
     insertMany(episodes);
 
+    if (req.headers.accept?.includes('json') || req.body.json === 'true' || req.body.json === true) {
+      return res.json({ success: true, seriesId: id });
+    }
     res.redirect(`/series/${id}`);
   } catch (error) {
     console.error('Error al agregar serie a seguimiento:', error);
+    if (req.headers.accept?.includes('json') || req.body.json === 'true' || req.body.json === true) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
     res.status(500).render('error', {
       title: 'Error de Sincronización',
       message: `No se pudo agregar la serie a seguimiento: ${error.message}`

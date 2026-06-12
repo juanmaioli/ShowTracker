@@ -31,25 +31,34 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
       <% results.forEach(show => { %>
         <div class="col">
-          <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
+          <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column" style="transition: all 0.2s ease;">
             <!-- Poster -->
-            <div class="poster-container" style="aspect-ratio: 2/3;">
+            <div class="poster-container position-relative" style="aspect-ratio: 2/3;">
+              <% if (!show.isFollowed) { %>
+                <div class="position-absolute top-0 start-0 m-3" style="z-index: 3;">
+                  <input class="form-check-input show-select-checkbox cursor-pointer shadow" 
+                         type="checkbox" 
+                         value="<%= show.tvdbId %>" 
+                         data-name="<%= show.name %>"
+                         style="width: 22px; height: 22px; border-radius: 50%; background-color: rgba(0,0,0,0.6); border: 2px solid var(--bs-primary) !important;">
+                </div>
+              <% } %>
               <img src="<%= show.image_url || show.image || show.thumbnail || '/img/placeholder.svg' %>" class="w-100 h-100 object-fit-cover poster-image" alt="<%= show.name %>" onerror="this.src='/img/placeholder.svg';">
             </div>
             
             <!-- Contenido -->
             <div class="card-body p-3 d-flex flex-column flex-grow-1">
               <h3 class="card-title fs-5 fw-bold text-truncate mb-1">
-                <%= show.name %>
+                <a href="https://thetvdb.com/series/<%= show.slug %>" target="_blank" class="text-decoration-underline text-white" title="Abrir en TheTVDB" style="transition: opacity 0.2s;">
+                  <%= show.name %>
+                </a>
                 <% if (show.year) { %>
                   (<%= show.year %>)
                 <% } else if (show.first_aired) { %>
                   (<%= show.first_aired.split('-')[0] %>)
                 <% } %>
               </h3>
-              <p class="card-text small text-truncate-3 flex-grow-1 mb-3">
-                <%= show.overview || 'Sin descripción disponible.' %>
-              </p>
+              
               
               <div class="mt-auto">
                 <% if (show.isFollowed) { %>
@@ -58,12 +67,9 @@
                     <a href="/series/<%= show.tvdbId %>" class="btn btn-outline-primary btn-sm rounded-pill px-3">Ver</a>
                   </div>
                 <% } else { %>
-                  <form action="/series/seguir" method="POST" onsubmit="showLoading(this)">
-                    <input type="hidden" name="tvdbId" value="<%= show.tvdbId %>">
-                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100 submit-btn">
-                      ➕ Agregar a Seguimiento
-                    </button>
-                  </form>
+                  <button type="button" class="btn btn-primary btn-sm rounded-pill w-100 btn-import-single" data-tvdb-id="<%= show.tvdbId %>" data-name="<%= show.name %>">
+                    ➕ Agregar a Seguimiento
+                  </button>
                 <% } %>
               </div>
             </div>
@@ -74,12 +80,297 @@
   <% } %>
 <% } %>
 
+<!-- Barra de acciones de importación masiva (Flotante) -->
+<div id="bulk-import-bar" class="fixed-bottom bg-dark bg-opacity-75 border-top border-secondary border-opacity-25 py-3 shadow-lg d-none animate__animated animate__slideInUp" style="z-index: 1030; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+  <!-- Contenido de selección (por defecto) -->
+  <div class="container d-flex flex-column gap-2" id="bulk-bar-content">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-2">
+        <span class="fs-4">📥</span>
+        <span class="fw-semibold text-white fs-5" id="selected-count-text">0 series seleccionadas</span>
+        <button type="button" class="btn btn-sm btn-link text-info ms-2 p-0" id="btn-toggle-queue-list" style="text-decoration: none;">Ver lista</button>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-light rounded-pill px-4" id="btn-deselect-all">Limpiar cola</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow" id="btn-import-selected">
+          ➕ Importar Seleccionadas
+        </button>
+      </div>
+    </div>
+    
+    <!-- Lista colapsable de series en cola -->
+    <div id="queue-list-container" class="d-none mt-2 p-3 bg-black bg-opacity-40 rounded-3 border border-secondary border-opacity-25 text-white" style="max-height: 150px; overflow-y: auto; scrollbar-width: thin;">
+      <h4 class="fs-6 fw-bold mb-2 text-primary">Series en Cola de Descarga:</h4>
+      <ul class="list-unstyled mb-0 small" id="queue-ul-list">
+        <!-- Llenado dinámicamente -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- Contenido de progreso en segundo plano -->
+  <div class="container d-none flex-column gap-2" id="bulk-bar-progress">
+    <div class="d-flex align-items-center justify-content-between w-100">
+      <div class="d-flex align-items-center gap-2">
+        <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true" style="width: 1rem; height: 1rem;"></span>
+        <span class="fw-semibold text-white" id="progress-status-text">Importando 0 de 0 series en segundo plano...</span>
+      </div>
+      <span class="text-white-50 small" id="progress-percent-text">0%</span>
+    </div>
+    <div class="progress rounded-pill w-100" style="height: 6px; background-color: rgba(255,255,255,0.1);">
+      <div id="progress-bar-fill" class="progress-bar progress-bar-striped progress-bar-animated bg-success rounded-pill" role="progressbar" style="width: 0%;"></div>
+    </div>
+    <div class="text-white-50 small text-truncate" id="progress-current-series" style="max-width: 100%;">
+      Iniciando descargas...
+    </div>
+  </div>
+</div>
+
 <script>
-  function showLoading(form) {
-    const btn = form.querySelector('.submit-btn');
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Descargando serie y episodios...`;
-  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const checkboxes = document.querySelectorAll('.show-select-checkbox');
+    const bulkBar = document.getElementById('bulk-import-bar');
+    const bulkBarContent = document.getElementById('bulk-bar-content');
+    const bulkBarProgress = document.getElementById('bulk-bar-progress');
+    
+    const selectedCountText = document.getElementById('selected-count-text');
+    const btnDeselectAll = document.getElementById('btn-deselect-all');
+    const btnImportSelected = document.getElementById('btn-import-selected');
+    const btnToggleQueueList = document.getElementById('btn-toggle-queue-list');
+    const queueListContainer = document.getElementById('queue-list-container');
+    const queueUlList = document.getElementById('queue-ul-list');
+    
+    const progressStatusText = document.getElementById('progress-status-text');
+    const progressPercentText = document.getElementById('progress-percent-text');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const progressCurrentSeries = document.getElementById('progress-current-series');
+
+    // Cargar cola desde localStorage
+    let importQueue = [];
+    try {
+      const savedQueue = localStorage.getItem('showtracker_import_queue');
+      if (savedQueue) {
+        importQueue = JSON.parse(savedQueue);
+      }
+    } catch (e) {
+      console.error('Error al parsear showtracker_import_queue:', e);
+      importQueue = [];
+    }
+
+    // Inicializar checkboxes y tarjetas según la cola persistida
+    checkboxes.forEach(chk => {
+      const tvdbId = chk.value;
+      const isInQueue = importQueue.some(item => String(item.id) === String(tvdbId));
+      if (isInQueue) {
+        chk.checked = true;
+        const card = chk.closest('.card');
+        card.classList.add('border', 'border-primary', 'border-2', 'shadow-lg');
+        card.style.transform = 'scale(1.02)';
+      }
+    });
+
+    updateBulkBar();
+
+    // Actualizar barra de importación masiva y lista colapsable
+    function updateBulkBar() {
+      const count = importQueue.length;
+      if (count > 0) {
+        selectedCountText.innerText = `${count} ${count === 1 ? 'serie seleccionada' : 'series seleccionadas'}`;
+        bulkBar.classList.remove('d-none');
+        bulkBar.classList.add('d-flex');
+        
+        // Renderizar lista colapsable
+        queueUlList.innerHTML = '';
+        importQueue.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'd-flex justify-content-between align-items-center mb-1 py-1 border-bottom border-secondary border-opacity-10';
+          li.innerHTML = `
+            <span>🍿 ${item.name}</span>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="removeFromQueue('${item.id}')" style="text-decoration: none; font-size: 0.8rem;">❌ Quitar</button>
+          `;
+          queueUlList.appendChild(li);
+        });
+      } else {
+        bulkBar.classList.remove('d-flex');
+        bulkBar.classList.add('d-none');
+        queueListContainer.classList.add('d-none');
+        btnToggleQueueList.innerText = 'Ver lista';
+      }
+    }
+
+    // Guardar cola en localStorage
+    function saveQueue() {
+      localStorage.setItem('showtracker_import_queue', JSON.stringify(importQueue));
+    }
+
+    // Quitar elemento de la cola (expuesta globalmente para el botón Quitar)
+    window.removeFromQueue = function(id) {
+      importQueue = importQueue.filter(item => String(item.id) !== String(id));
+      saveQueue();
+      
+      // Desmarcar checkbox si está en la pantalla actual
+      const chk = document.querySelector(`.show-select-checkbox[value="${id}"]`);
+      if (chk) {
+        chk.checked = false;
+        const card = chk.closest('.card');
+        card.classList.remove('border', 'border-primary', 'border-2', 'shadow-lg');
+        card.style.transform = 'none';
+      }
+      
+      updateBulkBar();
+    };
+
+    // Alternar vista de la lista en cola
+    btnToggleQueueList.addEventListener('click', () => {
+      if (queueListContainer.classList.contains('d-none')) {
+        queueListContainer.classList.remove('d-none');
+        btnToggleQueueList.innerText = 'Ocultar lista';
+      } else {
+        queueListContainer.classList.add('d-none');
+        btnToggleQueueList.innerText = 'Ver lista';
+      }
+    });
+
+    // Escuchar cambios en checkboxes de la pantalla actual
+    checkboxes.forEach(chk => {
+      chk.addEventListener('change', () => {
+        const id = chk.value;
+        const name = chk.dataset.name;
+        const card = chk.closest('.card');
+        
+        if (chk.checked) {
+          card.classList.add('border', 'border-primary', 'border-2', 'shadow-lg');
+          card.style.transform = 'scale(1.02)';
+          
+          // Agregar a la cola si no está
+          if (!importQueue.some(item => String(item.id) === String(id))) {
+            importQueue.push({ id, name });
+          }
+        } else {
+          card.classList.remove('border', 'border-primary', 'border-2', 'shadow-lg');
+          card.style.transform = 'none';
+          
+          // Remover de la cola
+          importQueue = importQueue.filter(item => String(item.id) !== String(id));
+        }
+        
+        saveQueue();
+        updateBulkBar();
+      });
+    });
+
+    // Limpiar toda la cola
+    btnDeselectAll.addEventListener('click', () => {
+      checkboxes.forEach(chk => {
+        chk.checked = false;
+        const card = chk.closest('.card');
+        card.classList.remove('border', 'border-primary', 'border-2', 'shadow-lg');
+        card.style.transform = 'none';
+      });
+      importQueue = [];
+      saveQueue();
+      updateBulkBar();
+    });
+
+    // Botón unitario "Agregar a Seguimiento"
+    document.querySelectorAll('.btn-import-single').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tvdbId = btn.dataset.tvdbId;
+        const name = btn.dataset.name;
+        
+        // Agregar a la cola
+        if (!importQueue.some(item => String(item.id) === String(tvdbId))) {
+          importQueue.push({ id: tvdbId, name });
+          saveQueue();
+        }
+        
+        // Marcar check si está visible
+        const chk = document.querySelector(`.show-select-checkbox[value="${tvdbId}"]`);
+        if (chk) {
+          chk.checked = true;
+          const card = chk.closest('.card');
+          card.classList.add('border', 'border-primary', 'border-2', 'shadow-lg');
+        }
+        
+        updateBulkBar();
+        startImport();
+      });
+    });
+
+    // Gatillar importación masiva
+    btnImportSelected.addEventListener('click', startImport);
+
+    async function startImport() {
+      if (importQueue.length === 0) return;
+
+      // Deshabilitar checkboxes en pantalla para evitar manipulación durante descarga
+      checkboxes.forEach(chk => chk.disabled = true);
+      document.querySelectorAll('.btn-import-single').forEach(btn => btn.disabled = true);
+      
+      // Ocultar la lista colapsable si está desplegada
+      queueListContainer.classList.add('d-none');
+      btnToggleQueueList.classList.add('d-none');
+      
+      // Cambiar contenido de la barra flotante a progreso
+      bulkBarContent.classList.remove('d-flex');
+      bulkBarContent.classList.add('d-none');
+      bulkBarProgress.classList.remove('d-none');
+      bulkBarProgress.classList.add('d-flex');
+      
+      progressBarFill.style.width = '0%';
+      progressPercentText.innerText = '0%';
+      
+      const total = importQueue.length;
+      progressStatusText.innerText = `Importando 0 de ${total} series en segundo plano...`;
+      let completedCount = 0;
+
+      // Guardar cola localmente para el bucle
+      const queueToImport = [...importQueue];
+      
+      // Procesar en paralelo
+      const promises = queueToImport.map(async (item) => {
+        const id = item.id;
+        const name = item.name;
+
+        progressCurrentSeries.innerText = `Descargando: ${name}`;
+
+        try {
+          const response = await fetch('/series/seguir', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ tvdbId: id, json: true })
+          });
+
+          await response.json();
+        } catch (err) {
+          console.error(`Error importando ${name}:`, err);
+        } finally {
+          completedCount++;
+          const pct = Math.round((completedCount / total) * 100);
+          progressBarFill.style.width = `${pct}%`;
+          progressPercentText.innerText = `${pct}%`;
+          progressStatusText.innerText = `Importando ${completedCount} de ${total} series en segundo plano...`;
+        }
+      });
+
+      // Esperar a que terminen todas
+      await Promise.all(promises);
+
+      // Limpiar cola en localStorage y memoria tras completarse
+      importQueue = [];
+      saveQueue();
+
+      // Finalizado
+      progressCurrentSeries.innerText = '🎉 ¡Todo listo! Redirigiendo al panel de inicio...';
+      
+      // Redirigir al inicio tras 1.5s
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500);
+    }
+  });
 </script>
 
 <%- include('partials/footer') %>

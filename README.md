@@ -6,7 +6,8 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 
 ## 🚀 Características Principales
 
-*   **Buscador Integrado:** Conexión directa con la API de **TheTVDB v4** para buscar cualquier serie de televisión.
+*   **Buscador de Series Optimizado:** Conexión directa con la API de **TheTVDB v4** con un diseño de tarjetas de resultados más compacto (sin resúmenes redundantes) y con enlaces directos integrados en el título para abrir la serie correspondiente en TheTVDB en una nueva pestaña.
+*   **Importación Paralela y Masiva (Cola Persistente):** Sistema interactivo que permite acumular múltiples series seleccionadas en una lista de descargas persistente en el navegador (`localStorage`) a través de diferentes búsquedas. El proceso de descarga e importación local de todas las series seleccionadas se realiza en paralelo (segundo plano) mediante AJAX, con una barra de progreso integrada no invasiva y redirección automatizada al finalizar.
 *   **Gestión en Caché Local:** Descarga y almacenamiento de metadatos (descripción, calificación, estado) y episodios de forma local para evitar sobrepasar los límites de cuota de la API.
 *   **Almacenamiento Completo e Ilimitado de Artworks:** Descarga automática de **todos** los posters e imágenes de fondo (backgrounds) de la serie en directorios locales (`public/img/posters/` y `public/img/backgrounds/`), permitiendo poblar galerías de arte de la serie de manera offline e ilimitada.
 *   **Elenco Principal (Cast):** Almacenamiento y descarga de fotos de los actores principales de cada serie en el directorio local `public/img/cast/` (máximo de 12 por serie) y visualización interactiva en una cuadrícula de 8 columnas con retratos circulares.
