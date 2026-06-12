@@ -8,7 +8,7 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 
 *   **Buscador Integrado:** Conexión directa con la API de **TheTVDB v4** para buscar cualquier serie de televisión.
 *   **Gestión en Caché Local:** Descarga y almacenamiento de metadatos (descripción, calificación, estado) y episodios de forma local para evitar sobrepasar los límites de cuota de la API.
-*   **Almacenamiento Estructurado de Artworks:** Descarga automática de carátulas (posters) e imágenes de fondo (backgrounds) en directorios locales (`public/img/posters/` y `public/img/backgrounds/`).
+*   **Almacenamiento Completo e Ilimitado de Artworks:** Descarga automática de **todos** los posters e imágenes de fondo (backgrounds) de la serie en directorios locales (`public/img/posters/` y `public/img/backgrounds/`), permitiendo poblar galerías de arte de la serie de manera offline e ilimitada.
 *   **Elenco Principal (Cast):** Almacenamiento y descarga de fotos de los actores principales de cada serie en el directorio local `public/img/cast/` (máximo de 12 por serie) y visualización interactiva en una cuadrícula de 8 columnas con retratos circulares.
 *   **Marcar Serie Completa:** Botón interactivo en el detalle de la serie que permite marcar o desmarcar todos los episodios como vistos de forma simultánea mediante peticiones AJAX fluidas.
 *   **Calificación por Temporadas (0-5★):** Sistema interactivo que permite calificar de forma individual cada temporada de una serie utilizando un componente interactivo de estrellas. Las calificaciones se guardan en la tabla local `season_ratings`.
