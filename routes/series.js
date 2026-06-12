@@ -120,6 +120,9 @@ router.get('/:id', (req, res) => {
     const showPosters = artworks.filter(art => art.type === 'poster').map(a => a.image);
     const showBackgrounds = artworks.filter(art => art.type === 'background').map(a => a.image);
 
+    // Obtener elenco de la serie
+    const cast = db.prepare('SELECT * FROM series_cast WHERE series_id = ? ORDER BY sort_order ASC').all(showId);
+
     res.render('show', {
       title: show.name,
       activePage: 'home',
@@ -133,7 +136,8 @@ router.get('/:id', (req, res) => {
       artworks: {
         posters: showPosters,
         backgrounds: showBackgrounds
-      }
+      },
+      cast
     });
   } catch (error) {
     console.error('Error al cargar detalle de serie:', error);
@@ -237,6 +241,33 @@ router.post('/seguir', async (req, res) => {
           const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'backgrounds');
           insertArtwork.run(id, 'background', localArtPath);
         }
+      }
+    }
+
+    // Guardar el elenco (cast) en la tabla series_cast (máximo 12 personajes para optimizar)
+    if (series.characters && Array.isArray(series.characters)) {
+      const insertCast = db.prepare(`
+        INSERT INTO series_cast (series_id, actor_name, character_name, image, sort_order)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+
+      const characters = series.characters.slice(0, 12);
+
+      for (let i = 0; i < characters.length; i++) {
+        const char = characters[i];
+        const actorName = char.personName || 'Actor Desconocido';
+        const charName = char.name || 'Personaje Desconocido';
+        const imgUrl = char.image || char.personImgURL;
+        
+        let localCastImgPath = null;
+        if (imgUrl) {
+          const filenameId = `${id}-actor-${char.id || i}`;
+          localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
+        } else {
+          localCastImgPath = '/img/cast-placeholder.svg';
+        }
+
+        insertCast.run(id, actorName, charName, localCastImgPath, char.sort || i);
       }
     }
 

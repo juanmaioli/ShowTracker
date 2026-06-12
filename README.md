@@ -6,13 +6,16 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 
 ## 🚀 Características Principales
 
-*   **Buscador Integrado:** Conexión directa con la API de TheTVDB v4 para buscar cualquier serie de televisión.
+*   **Buscador Integrado:** Conexión directa con la API de **TheTVDB v4** para buscar cualquier serie de televisión.
 *   **Gestión en Caché Local:** Descarga y almacenamiento de metadatos (descripción, calificación, estado) y episodios de forma local para evitar sobrepasar los límites de cuota de la API.
 *   **Almacenamiento Estructurado de Artworks:** Descarga automática de carátulas (posters) e imágenes de fondo (backgrounds) en directorios locales (`public/img/posters/` y `public/img/backgrounds/`).
-*   **Galería Interactiva:** Detalle de serie con carrusel autodecorativo de backgrounds y catálogo de posters alternativos descargados.
+*   **Elenco Principal (Cast):** Almacenamiento y descarga de fotos de los actores principales de cada serie en el directorio local `public/img/cast/` (máximo de 12 por serie) y visualización interactiva en una cuadrícula de 8 columnas con retratos circulares.
+*   **Marcar Serie Completa:** Botón interactivo en el detalle de la serie que permite marcar o desmarcar todos los episodios como vistos de forma simultánea mediante peticiones AJAX fluidas.
+*   **Galería Interactiva y Zoom:** Detalle de serie con carrusel autodecorativo de backgrounds y catálogo de posters alternativos con función de zoom (apertura en pestaña nueva al hacer clic) y controles reposicionados para una mejor legibilidad.
+*   **Dashboard Optimizado:** Tarjetas de series un 20% más compactas (grilla de 5 columnas en resoluciones grandes) y ordenadas alfabéticamente de forma predeterminada.
 *   **Estadísticas de Consumo de API:** Control detallado de cuota de la API (límite anual de 50.000 llamadas) y contador del tiempo total de visualización de episodios del usuario.
-*   **Interfaz Premium Autoadaptativa:** Diseñada con Bootstrap 5.3, glassmorphism y soporte de cambio de tema claro y oscuro (☀️ / 🌙) con persistencia local (`localStorage`) y transiciones fluidas.
-*   **Traducción Inteligente:** Priorización de idioma español (`spa`) para la metadata con fallback automático a inglés (`eng`) en caso de no encontrarse traducción disponible.
+*   **Interfaz Premium Autoadaptativa:** Diseñada con **Bootstrap 5.3**, glassmorphism y soporte de cambio de tema claro y oscuro (☀️ / 🌙) con persistencia local (`localStorage`) y transiciones fluidas.
+*   **Traducción Inteligente:** Priorización de idioma español (`spa`) para la metadata mediante rutas específicas de traducción con fallback automático a inglés (`eng`) en caso de no encontrarse traducción disponible.
 
 ---
 

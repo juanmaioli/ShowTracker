@@ -32,9 +32,16 @@
       </div>
     </div>
 
-    <!-- Barra de progreso dentro del banner -->
+    <!-- Barra de progreso dentro del banner con botón para marcar todo -->
     <div class="mt-4 bg-black bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25">
-      <h5 class="fs-6 fw-bold text-white mb-2">Progreso de la Serie</h5>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="fs-6 fw-bold text-white mb-0">Progreso de la Serie</h5>
+        <button class="btn btn-sm <%= progress.total === progress.watched ? 'btn-outline-warning' : 'btn-outline-success' %> rounded-pill py-0 px-2 btn-series-toggle" 
+                data-series-id="<%= show.id %>" 
+                data-watched="<%= progress.total === progress.watched ? 'true' : 'false' %>">
+          <%= progress.total === progress.watched ? 'Desmarcar toda la serie' : 'Completar toda la serie' %>
+        </button>
+      </div>
       <div class="d-flex align-items-center gap-3">
         <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
           <div id="series-progress-bar" class="progress-bar bg-success rounded-pill" role="progressbar" style="width: <%= progress.percentage %>%" aria-valuenow="<%= progress.percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
@@ -76,9 +83,16 @@
         <p class="lead text-secondary-emphasis"><%= show.overview %></p>
       </div>
 
-      <!-- Barra de progreso general -->
+      <!-- Barra de progreso general con botón para marcar todo -->
       <div class="card glass-card p-3 rounded-3 mt-4 border-secondary border-opacity-25 shadow-sm">
-        <h5 class="fs-6 fw-bold mb-2">Progreso de la Serie</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="fs-6 fw-bold mb-0">Progreso de la Serie</h5>
+          <button class="btn btn-sm <%= progress.total === progress.watched ? 'btn-outline-warning' : 'btn-outline-success' %> rounded-pill py-0 px-2 btn-series-toggle" 
+                  data-series-id="<%= show.id %>" 
+                  data-watched="<%= progress.total === progress.watched ? 'true' : 'false' %>">
+            <%= progress.total === progress.watched ? 'Desmarcar toda la serie' : 'Completar toda la serie' %>
+          </button>
+        </div>
         <div class="d-flex align-items-center gap-3">
           <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
             <div id="series-progress-bar" class="progress-bar bg-success rounded-pill" role="progressbar" style="width: <%= progress.percentage %>%" aria-valuenow="<%= progress.percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
@@ -89,6 +103,33 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+<% } %>
+
+<% if (cast && cast.length > 0) { %>
+<!-- Elenco Principal -->
+<div class="card glass-card p-4 rounded-4 shadow border-0 mb-5">
+  <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
+    <span>🎭</span> Elenco Principal
+  </h2>
+  
+  <div class="row row-cols-2 row-cols-sm-4 row-cols-md-6 row-cols-lg-8 g-3">
+    <% cast.forEach(actor => { %>
+      <div class="col text-center">
+        <div class="position-relative mx-auto rounded-circle overflow-hidden shadow-sm border border-secondary border-opacity-25" style="width: 80px; height: 80px;">
+          <a href="<%= actor.image %>" target="_blank" title="Ver foto de <%= actor.actor_name %>" class="<%= actor.image !== '/img/cast-placeholder.svg' ? 'cursor-zoom' : '' %>">
+            <img src="<%= actor.image %>" class="w-100 h-100 object-fit-cover" alt="<%= actor.actor_name %>" onerror="this.src='/img/cast-placeholder.svg';">
+          </a>
+        </div>
+        <span class="fw-semibold small text-truncate d-block mt-2" title="<%= actor.actor_name %>">
+          <%= actor.actor_name %>
+        </span>
+        <span class="text-secondary small text-truncate d-block" title="<%= actor.character_name %>" style="font-size: 0.75rem;">
+          <%= actor.character_name %>
+        </span>
+      </div>
+    <% }) %>
   </div>
 </div>
 <% } %>
@@ -244,9 +285,9 @@
   // Manejar toggle de episodios individuales
   document.querySelectorAll('.episode-checkbox').forEach(chk => {
     chk.addEventListener('change', async (e) => {
-      const episodeId = e.target.value;
-      const isChecked = e.target.checked;
-      const seasonNum = e.target.dataset.seasonNumber;
+      const episodeId = e.currentTarget.value;
+      const isChecked = e.currentTarget.checked;
+      const seasonNum = e.currentTarget.dataset.seasonNumber;
 
       try {
         const response = await fetch('/episodes/toggle-watched', {
@@ -263,11 +304,11 @@
           // Actualizar contador de la temporada
           updateSeasonCounter(seasonNum);
         } else {
-          e.target.checked = !isChecked; // Deshacer cambio si falló
+          e.currentTarget.checked = !isChecked; // Deshacer cambio si falló
         }
       } catch (err) {
         console.error(err);
-        e.target.checked = !isChecked;
+        e.currentTarget.checked = !isChecked;
       }
     });
   });
@@ -275,9 +316,9 @@
   // Manejar toggle de temporadas completas
   document.querySelectorAll('.btn-season-toggle').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const seriesId = e.target.dataset.seriesId;
-      const seasonNumber = e.target.dataset.seasonNumber;
-      const currentWatched = e.target.dataset.watched === 'true';
+      const seriesId = e.currentTarget.dataset.seriesId;
+      const seasonNumber = e.currentTarget.dataset.seasonNumber;
+      const currentWatched = e.currentTarget.dataset.watched === 'true';
       const targetWatched = !currentWatched;
 
       try {
@@ -294,9 +335,9 @@
           checkboxes.forEach(chk => chk.checked = targetWatched);
 
           // Actualizar el botón
-          e.target.dataset.watched = targetWatched ? 'true' : 'false';
-          e.target.innerHTML = targetWatched ? 'Desmarcar temporada' : 'Completar temporada';
-          e.target.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
+          e.currentTarget.dataset.watched = targetWatched ? 'true' : 'false';
+          e.currentTarget.innerHTML = targetWatched ? 'Desmarcar temporada' : 'Completar temporada';
+          e.currentTarget.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
 
           // Actualizar barra de progreso
           updateSeriesProgress(data.seriesProgress);
@@ -312,14 +353,73 @@
     });
   });
 
+  // Manejar toggle de serie completa
+  document.querySelectorAll('.btn-series-toggle').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const seriesId = e.currentTarget.dataset.seriesId;
+      const currentWatched = e.currentTarget.dataset.watched === 'true';
+      const targetWatched = !currentWatched;
+
+      try {
+        const response = await fetch('/episodes/toggle-series', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seriesId, watched: targetWatched })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // 1. Actualizar todos los checkboxes de episodios en el DOM
+          document.querySelectorAll('.episode-checkbox').forEach(chk => chk.checked = targetWatched);
+
+          // 2. Actualizar todos los botones de temporada
+          document.querySelectorAll('.btn-season-toggle').forEach(tBtn => {
+            tBtn.dataset.watched = targetWatched ? 'true' : 'false';
+            tBtn.innerHTML = targetWatched ? 'Desmarcar temporada' : 'Completar temporada';
+            tBtn.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
+          });
+
+          // 3. Actualizar todos los contadores de las temporadas
+          document.querySelectorAll('[id^="season-count-"]').forEach(badge => {
+            const seasonNum = badge.id.replace('season-count-', '');
+            const total = document.querySelectorAll(`.episode-checkbox[data-season-number="${seasonNum}"]`).length;
+            badge.innerText = `${targetWatched ? total : 0} / ${total} vistos`;
+          });
+
+          // 4. Actualizar barra de progreso de la serie
+          updateSeriesProgress(data.seriesProgress);
+
+          // 5. Actualizar el estado de todos los botones de toggle de la serie (tanto premium como estándar)
+          document.querySelectorAll('.btn-series-toggle').forEach(sBtn => {
+            sBtn.dataset.watched = targetWatched ? 'true' : 'false';
+            sBtn.innerHTML = targetWatched ? 'Desmarcar toda la serie' : 'Completar toda la serie';
+            sBtn.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-series-toggle`;
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+
   function updateSeriesProgress(progress) {
-    const bar = document.getElementById('series-progress-bar');
-    const txt = document.getElementById('series-progress-text');
-    if (bar && txt) {
+    // Buscar y actualizar todas las instancias de barras de progreso y textos en la página
+    document.querySelectorAll('#series-progress-bar').forEach(bar => {
       bar.style.width = `${progress.percentage}%`;
       bar.setAttribute('aria-valuenow', progress.percentage);
+    });
+    
+    document.querySelectorAll('#series-progress-text').forEach(txt => {
       txt.innerText = `${progress.watched} / ${progress.total} (${progress.percentage}%)`;
-    }
+    });
+
+    // Actualizar el estado del botón de marcar serie completa dinámicamente
+    const allWatched = progress.total === progress.watched;
+    document.querySelectorAll('.btn-series-toggle').forEach(sBtn => {
+      sBtn.dataset.watched = allWatched ? 'true' : 'false';
+      sBtn.innerHTML = allWatched ? 'Desmarcar toda la serie' : 'Completar toda la serie';
+      sBtn.className = `btn btn-sm ${allWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-series-toggle`;
+    });
   }
 
   function updateSeasonCounter(seasonNum) {

@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
       FROM series s
       LEFT JOIN episodes e ON s.id = e.series_id
       GROUP BY s.id
-      ORDER BY s.added_at DESC
+      ORDER BY s.name ASC
     `;
     const shows = db.prepare(query).all();
 

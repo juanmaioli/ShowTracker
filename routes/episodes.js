@@ -80,4 +80,42 @@ router.post('/toggle-season', (req, res) => {
   }
 });
 
+// Marcar toda la serie como vista o no vista
+router.post('/toggle-series', (req, res) => {
+  const { seriesId, watched } = req.body;
+  if (seriesId === undefined || watched === undefined) {
+    return res.status(400).json({ error: 'Faltan parámetros obligatorios' });
+  }
+
+  try {
+    const id = parseInt(seriesId);
+    const watchedValue = watched ? 1 : 0;
+    
+    // Actualizar todos los episodios de la serie
+    db.prepare('UPDATE episodes SET watched = ? WHERE series_id = ?')
+      .run(watchedValue, id);
+
+    // Calcular progreso general de la serie
+    const stats = db.prepare(`
+      SELECT 
+        COUNT(id) as total,
+        SUM(CASE WHEN watched = 1 THEN 1 ELSE 0 END) as watched
+      FROM episodes
+      WHERE series_id = ?
+    `).get(id);
+
+    res.json({
+      success: true,
+      seriesProgress: {
+        total: stats.total,
+        watched: stats.watched || 0,
+        percentage: stats.total > 0 ? Math.round(((stats.watched || 0) / stats.total) * 100) : 0
+      }
+    });
+  } catch (error) {
+    console.error('Error al cambiar estado de toda la serie:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 module.exports = router;

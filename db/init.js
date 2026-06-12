@@ -60,10 +60,24 @@ function initDb() {
     )
   `).run();
 
+  // Crear tabla series_cast
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS series_cast (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      series_id INTEGER NOT NULL,
+      actor_name TEXT NOT NULL,
+      character_name TEXT,
+      image TEXT,
+      sort_order INTEGER,
+      FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE
+    )
+  `).run();
+
   // Crear índices para optimizar búsquedas comunes
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_series ON episodes(series_id)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_watched ON episodes(watched)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_artworks_series ON artworks(series_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_series_cast_series ON series_cast(series_id)`).run();
   db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_api_consumption_date_type ON api_consumption(date, type)`).run();
 
   console.log('Base de datos inicializada correctamente.');
