@@ -39,7 +39,14 @@
             
             <!-- Contenido -->
             <div class="card-body p-3 d-flex flex-column flex-grow-1">
-              <h3 class="card-title fs-5 fw-bold text-truncate mb-1"><%= show.name %></h3>
+              <h3 class="card-title fs-5 fw-bold text-truncate mb-1">
+                <%= show.name %>
+                <% if (show.year) { %>
+                  (<%= show.year %>)
+                <% } else if (show.first_aired) { %>
+                  (<%= show.first_aired.split('-')[0] %>)
+                <% } %>
+              </h3>
               <p class="card-text small text-truncate-3 flex-grow-1 mb-3">
                 <%= show.overview || 'Sin descripción disponible.' %>
               </p>

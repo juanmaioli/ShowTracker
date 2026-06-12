@@ -74,7 +74,7 @@
           
           <!-- Contenido -->
           <div class="card-body p-2 d-flex flex-column flex-grow-1">
-            <h3 class="card-title fs-6 fw-bold text-truncate mb-1"><%= show.name %></h3>
+            <h3 class="card-title fs-6 fw-bold text-truncate mb-1"><%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %></h3>
             <% 
               let statusText = show.status;
               let statusClass = 'bg-secondary bg-opacity-25 text-secondary-emphasis';

@@ -23,6 +23,7 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 *   **Estadísticas de Consumo de API:** Control detallado de cuota de la API (límite anual de 50.000 llamadas) y contador del tiempo total de visualización de episodios del usuario.
 *   **Mejoras de Accesibilidad (Alto Contraste):** Eliminación total de las clases de texto secundario/atenuado (`text-secondary` y `text-light` para textos descriptivos) en todas las vistas de la aplicación para garantizar la máxima legibilidad y contraste, facilitando el uso para personas con visión reducida.
 *   **Enlaces Directos a TheTVDB:** Los identificadores de serie en la vista de detalle ahora enlazan de forma directa a sus páginas correspondientes en TheTVDB, abriéndose en pestañas nuevas.
+*   **Año de Estreno en Títulos y Temporadas:** Visualización del año del primer episodio de la serie junto a su título principal (en dashboard, detalle y búsquedas) y el año de inicio de cada temporada al lado de su número en el desglose de episodios, permitiendo contextualizar temporalmente el contenido.
 *   **Interfaz Premium Autoadaptativa:** Diseñada con **Bootstrap 5.3**, glassmorphism y soporte de cambio de tema claro y oscuro (☀️ / 🌙) con persistencia local (`localStorage`) y transiciones fluidas.
 *   **Traducción Inteligente:** Priorización de idioma español (`spa`) para la metadata mediante rutas específicas de traducción con fallback automático a inglés (`eng`) en caso de no encontrarse traducción disponible.
 

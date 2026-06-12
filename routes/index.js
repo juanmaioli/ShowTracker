@@ -14,7 +14,8 @@ router.get('/', (req, res) => {
         s.status,
         s.score,
         COUNT(e.id) as total_episodes,
-        SUM(CASE WHEN e.watched = 1 THEN 1 ELSE 0 END) as watched_episodes
+        SUM(CASE WHEN e.watched = 1 THEN 1 ELSE 0 END) as watched_episodes,
+        MIN(CASE WHEN e.season_number > 0 AND e.air_date IS NOT NULL AND e.air_date != '' THEN e.air_date ELSE NULL END) as first_air_date
       FROM series s
       LEFT JOIN episodes e ON s.id = e.series_id
       GROUP BY s.id
@@ -28,6 +29,7 @@ router.get('/', (req, res) => {
     shows.forEach(show => {
       totalEpisodes += show.total_episodes;
       totalWatched += show.watched_episodes;
+      show.first_air_year = show.first_air_date ? show.first_air_date.split('-')[0] : null;
     });
 
     const overallProgress = totalEpisodes > 0 ? Math.round((totalWatched / totalEpisodes) * 100) : 0;

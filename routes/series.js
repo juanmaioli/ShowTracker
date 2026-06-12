@@ -95,6 +95,10 @@ router.get('/:id', (req, res) => {
       ORDER BY season_number ASC, episode_number ASC
     `).all(showId);
 
+    // Buscar primer episodio con fecha de emisión para extraer el año de inicio
+    const firstEp = episodes.find(e => e.season_number > 0 && e.air_date && e.air_date.trim() !== '') || episodes.find(e => e.air_date && e.air_date.trim() !== '');
+    show.first_air_year = firstEp ? firstEp.air_date.split('-')[0] : null;
+
     // Agrupar episodios por temporada
     const seasons = {};
     episodes.forEach(ep => {

@@ -23,7 +23,7 @@
       <!-- Detalles -->
       <div class="col-md-8 col-lg-9 text-white">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <h1 class="fw-black mb-0 display-5 text-shadow"><%= show.name %></h1>
+          <h1 class="fw-black mb-0 display-5 text-shadow"><%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %></h1>
           <% 
             let statusText = show.status;
             let statusClass = 'bg-primary bg-opacity-75';
@@ -86,7 +86,7 @@
     <div class="d-flex flex-column h-100 justify-content-between">
       <div>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <h1 class="fw-black mb-0 text-gradient"><%= show.name %></h1>
+          <h1 class="fw-black mb-0 text-gradient"><%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %></h1>
           <% 
             let statusTextStr = show.status;
             let statusClassStr = 'bg-primary bg-opacity-25 text-primary-emphasis';
@@ -172,7 +172,20 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3 bg-dark bg-opacity-25 text-light border-bottom border-secondary border-opacity-10">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-5">📁</span>
-            <span class="fw-bold"><%= season.name %></span>
+            <span class="fw-bold">
+              <%= season.name %>
+              <% 
+                const firstEpWithDate = season.episodes.find(e => e.air_date && e.air_date.trim() !== '');
+                if (firstEpWithDate) {
+                  const year = firstEpWithDate.air_date.split('-')[0];
+                  if (year) {
+              %>
+                (<%= year %>)
+              <% 
+                  }
+                } 
+              %>
+            </span>
           </div>
           
           <div class="d-flex align-items-center gap-3 ms-auto py-1">
