@@ -36,7 +36,7 @@
             }
           %>
           <span class="badge <%= statusClass %> rounded-pill"><%= statusText %></span>
-          <span class="badge bg-purple text-white rounded-pill">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
+          <span class="badge bg-purple text-white rounded-pill series-score-badge">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
         </div>
         <p class="text-white-50 small mb-3">ID de TheTVDB: <%= show.id %></p>
         <p class="lead text-light text-shadow opacity-90 mb-0"><%= show.overview %></p>
@@ -99,7 +99,7 @@
             }
           %>
           <span class="badge <%= statusClassStr %> rounded-pill"><%= statusTextStr %></span>
-          <span class="badge text-purple rounded-pill" style="background-color: var(--bs-purple-alt) !important;">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
+          <span class="badge text-purple rounded-pill series-score-badge" style="background-color: var(--bs-purple-alt) !important;">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
         </div>
         <p class="text-secondary small">ID de TheTVDB: <%= show.id %></p>
         <p class="lead text-secondary-emphasis"><%= show.overview %></p>
@@ -168,14 +168,23 @@
      const allWatched = seasonTotal === seasonWatched;
   %>
     <div class="accordion-item bg-dark bg-opacity-50">
-      <h2 class="accordion-header">
-        <div class="accordion-button bg-dark bg-opacity-25 text-light border-bottom border-secondary border-opacity-10 d-flex flex-wrap justify-content-between align-items-center gap-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeason-<%= season.number %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>">
+      <h2 class="accordion-header m-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3 bg-dark bg-opacity-25 text-light border-bottom border-secondary border-opacity-10">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-5">📁</span>
             <span class="fw-bold"><%= season.name %></span>
           </div>
           
-          <div class="d-flex align-items-center gap-3 ms-auto me-3 py-1" onclick="event.stopPropagation()">
+          <div class="d-flex align-items-center gap-3 ms-auto py-1">
+            <!-- Calificación por estrellas -->
+            <div class="star-rating d-flex align-items-center gap-1 me-2" data-series-id="<%= show.id %>" data-season-number="<%= season.number %>" data-rating="<%= season.rating || 0 %>">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <span class="star cursor-pointer fs-5" data-value="<%= i %>" style="color: <%= i <= (season.rating || 0) ? '#ffc107' : '#6c757d' %>; transition: color 0.2s ease;" title="Calificar con <%= i %> estrellas">
+                  <%= i <= (season.rating || 0) ? '★' : '☆' %>
+                </span>
+              <% } %>
+            </div>
+
             <!-- Contador de la temporada -->
             <span id="season-count-<%= season.number %>" class="badge bg-secondary bg-opacity-50 text-secondary-emphasis rounded-pill small">
               <%= seasonWatched %> / <%= seasonTotal %> vistos
@@ -186,6 +195,11 @@
                     data-season-number="<%= season.number %>" 
                     data-watched="<%= allWatched ? 'true' : 'false' %>">
               <%= allWatched ? 'Desmarcar temporada' : 'Completar temporada' %>
+            </button>
+
+            <!-- Flecha para contraer/expandir -->
+            <button class="btn btn-link text-light p-1 ms-2 accordion-toggle-arrow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeason-<%= season.number %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" style="text-decoration: none;" title="Mostrar/Ocultar episodios">
+              <span class="collapse-icon">▼</span>
             </button>
           </div>
         </div>
@@ -469,6 +483,65 @@
       btn.className = `btn btn-sm ${allWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
     }
   }
+
+  // Manejar calificación por estrellas de temporadas
+  document.querySelectorAll('.star-rating').forEach(container => {
+    const stars = container.querySelectorAll('.star');
+    const seriesId = container.dataset.seriesId;
+    const seasonNumber = container.dataset.seasonNumber;
+
+    // Efecto hover al pasar el mouse
+    stars.forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        const val = parseInt(star.dataset.value);
+        stars.forEach((s, idx) => {
+          s.innerText = (idx < val) ? '★' : '☆';
+          s.style.color = (idx < val) ? '#ffc107' : '#6c757d';
+        });
+      });
+    });
+
+    container.addEventListener('mouseleave', () => {
+      const currentRating = parseFloat(container.dataset.rating) || 0;
+      stars.forEach((s, idx) => {
+        s.innerText = (idx < currentRating) ? '★' : '☆';
+        s.style.color = (idx < currentRating) ? '#ffc107' : '#6c757d';
+      });
+    });
+
+    // Evento de clic para calificar
+    stars.forEach(star => {
+      star.addEventListener('click', async () => {
+        const val = parseInt(star.dataset.value);
+        
+        try {
+          const response = await fetch('/series/rate-season', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ seriesId, seasonNumber, rating: val })
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            container.dataset.rating = val;
+            
+            // Actualizar estrellas visualmente
+            stars.forEach((s, idx) => {
+              s.innerText = (idx < val) ? '★' : '☆';
+              s.style.color = (idx < val) ? '#ffc107' : '#6c757d';
+            });
+            
+            // Actualizar todas las instancias del promedio de la serie (score) en los badges
+            document.querySelectorAll('.series-score-badge').forEach(badge => {
+              badge.innerHTML = `⭐ ${data.averageRating}`;
+            });
+          }
+        } catch (err) {
+          console.error('Error al enviar la calificación:', err);
+        }
+      });
+    });
+  });
 </script>
 
 <style>
@@ -477,6 +550,14 @@
   }
   .cursor-zoom {
     cursor: zoom-in;
+  }
+  .accordion-toggle-arrow .collapse-icon {
+    transition: transform 0.2s ease;
+    transform: rotate(0deg);
+    display: inline-block;
+  }
+  .accordion-toggle-arrow[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
   }
 </style>
 

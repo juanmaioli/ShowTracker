@@ -73,6 +73,17 @@ function initDb() {
     )
   `).run();
 
+  // Crear tabla season_ratings
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS season_ratings (
+      series_id INTEGER NOT NULL,
+      season_number INTEGER NOT NULL,
+      rating REAL NOT NULL,
+      PRIMARY KEY (series_id, season_number),
+      FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE
+    )
+  `).run();
+
   // Crear índices para optimizar búsquedas comunes
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_series ON episodes(series_id)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_watched ON episodes(watched)`).run();

@@ -1,6 +1,6 @@
 {
   "name": "showtracker",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Seguimiento de series de televisión usando TheTVDB v4, SQLite y Bootstrap 5.3",
   "main": "app.js",
   "scripts": {

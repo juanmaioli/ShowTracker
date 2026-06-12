@@ -123,11 +123,26 @@ router.get('/:id', (req, res) => {
     // Obtener elenco de la serie
     const cast = db.prepare('SELECT * FROM series_cast WHERE series_id = ? ORDER BY sort_order ASC').all(showId);
 
+    // Obtener calificaciones de las temporadas
+    const ratings = db.prepare('SELECT season_number, rating FROM season_ratings WHERE series_id = ?').all(showId);
+    const ratingsMap = {};
+    ratings.forEach(r => {
+      ratingsMap[r.season_number] = r.rating;
+    });
+
+    // Agregar la calificación a cada temporada
+    const sortedSeasons = Object.values(seasons).sort((a, b) => a.number - b.number).map(season => {
+      return {
+        ...season,
+        rating: ratingsMap[season.number] || 0
+      };
+    });
+
     res.render('show', {
       title: show.name,
       activePage: 'home',
       show,
-      seasons: Object.values(seasons).sort((a, b) => a.number - b.number),
+      seasons: sortedSeasons,
       progress: {
         total: totalEpisodes,
         watched: watchedEpisodes,
@@ -201,7 +216,7 @@ router.post('/seguir', async (req, res) => {
       localBgPath,
       series.status?.name || 'Unknown',
       getLocalized(series, 'overview', 'Sin descripción disponible.'),
-      series.score || 0
+      series.score ? (series.score / 2) : 0
     );
 
     // Guardar TODOS los posters y backgrounds en la tabla artworks (máximo 15 de cada uno para optimizar recursos)
@@ -332,4 +347,48 @@ router.post('/eliminar', (req, res) => {
   }
 });
 
+// Calificar una temporada
+router.post('/rate-season', (req, res) => {
+  const { seriesId, seasonNumber, rating } = req.body;
+  if (seriesId === undefined || seasonNumber === undefined || rating === undefined) {
+    return res.status(400).json({ error: 'Faltan parámetros obligatorios' });
+  }
+
+  const id = parseInt(seriesId);
+  const seasonNum = parseInt(seasonNumber);
+  const scoreVal = parseFloat(rating);
+
+  if (isNaN(id) || isNaN(seasonNum) || isNaN(scoreVal) || scoreVal < 0 || scoreVal > 5) {
+    return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+
+  try {
+    // 1. Guardar la calificación de la temporada
+    db.prepare(`
+      INSERT INTO season_ratings (series_id, season_number, rating)
+      VALUES (?, ?, ?)
+      ON CONFLICT(series_id, season_number) DO UPDATE SET rating = excluded.rating
+    `).run(id, seasonNum, scoreVal);
+
+    // 2. Calcular el promedio de las calificaciones de las temporadas para esta serie
+    const avgRow = db.prepare(`
+      SELECT AVG(rating) as average FROM season_ratings WHERE series_id = ?
+    `).get(id);
+
+    const averageRating = avgRow.average || 0;
+
+    // 3. Actualizar la calificación de la serie
+    db.prepare('UPDATE series SET score = ? WHERE id = ?').run(averageRating, id);
+
+    res.json({
+      success: true,
+      averageRating: averageRating.toFixed(1)
+    });
+  } catch (error) {
+    console.error('Error al calificar la temporada:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 module.exports = router;
+
