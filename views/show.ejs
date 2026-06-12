@@ -194,26 +194,29 @@
   <div class="tab-content" id="galleryTabsContent">
     <% if (artworks.backgrounds && artworks.backgrounds.length > 0) { %>
       <div class="tab-pane fade show active" id="bg-tab-pane" role="tabpanel" aria-labelledby="bg-tab" tabindex="0">
-        <!-- Carrusel de Backgrounds -->
-        <div id="carouselBackgrounds" class="carousel slide carousel-fade rounded-3 overflow-hidden shadow" data-bs-ride="carousel">
-          <div class="carousel-inner rounded-3" style="max-height: 500px;">
+        <!-- Carrusel de Backgrounds (Achicado y centrado, sin recortar imágenes) -->
+        <div id="carouselBackgrounds" class="carousel slide carousel-fade rounded-3 overflow-hidden shadow mx-auto" data-bs-ride="carousel" style="max-width: 750px;">
+          <div class="carousel-inner rounded-3" style="height: 380px;">
             <% artworks.backgrounds.forEach((bg, idx) => { %>
-              <div class="carousel-item <%= idx === 0 ? 'active' : '' %>" style="aspect-ratio: 16/9; max-height: 500px;">
-                <img src="<%= bg %>" class="d-block w-100 object-fit-cover h-100" alt="Fondo de <%= show.name %>">
+              <div class="carousel-item <%= idx === 0 ? 'active' : '' %> bg-black bg-opacity-25" style="height: 380px;">
+                <a href="<%= bg %>" target="_blank" title="Abrir fondo en una nueva pestaña" class="d-block w-100 h-100 cursor-zoom">
+                  <img src="<%= bg %>" class="d-block w-100 h-100 object-fit-contain" alt="Fondo de <%= show.name %>">
+                </a>
               </div>
             <% }) %>
           </div>
-          <% if (artworks.backgrounds.length > 1) { %>
-            <button class="carousel-control-prev" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Anterior</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Siguiente</span>
-            </button>
-          <% } %>
         </div>
+        <% if (artworks.backgrounds.length > 1) { %>
+          <!-- Controles de navegación posicionados debajo de la imagen -->
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="prev">
+              ◀️ Anterior
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="next">
+              Siguiente ▶️
+            </button>
+          </div>
+        <% } %>
       </div>
     <% } %>
 
@@ -224,7 +227,9 @@
           <% artworks.posters.forEach((poster, idx) => { %>
             <div class="col">
               <div class="card bg-dark border-secondary border-opacity-25 rounded-3 overflow-hidden shadow-sm h-100">
-                <img src="<%= poster %>" class="w-100 object-fit-cover" style="aspect-ratio: 2/3;" alt="Poster de <%= show.name %>" onerror="this.src='/img/placeholder.svg';">
+                <a href="<%= poster %>" target="_blank" title="Abrir poster en una nueva pestaña" class="d-block h-100 cursor-zoom">
+                  <img src="<%= poster %>" class="w-100 object-fit-cover" style="aspect-ratio: 2/3;" alt="Poster de <%= show.name %>" onerror="this.src='/img/placeholder.svg';">
+                </a>
               </div>
             </div>
           <% }) %>
@@ -341,6 +346,9 @@
 <style>
   .cursor-pointer {
     cursor: pointer;
+  }
+  .cursor-zoom {
+    cursor: zoom-in;
   }
 </style>
 
