@@ -24,8 +24,19 @@
       <div class="col-md-8 col-lg-9 text-white">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           <h1 class="fw-black mb-0 display-5 text-shadow"><%= show.name %></h1>
-          <span class="badge bg-primary bg-opacity-75 rounded-pill"><%= show.status %></span>
-          <span class="badge bg-warning text-dark rounded-pill">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
+          <% 
+            let statusText = show.status;
+            let statusClass = 'bg-primary bg-opacity-75';
+            if (show.status && show.status.toLowerCase() === 'continuing') {
+              statusText = 'En emisión';
+              statusClass = 'bg-success text-white';
+            } else if (show.status && show.status.toLowerCase() === 'ended') {
+              statusText = 'Terminada';
+              statusClass = 'bg-danger text-white';
+            }
+          %>
+          <span class="badge <%= statusClass %> rounded-pill"><%= statusText %></span>
+          <span class="badge bg-purple text-white rounded-pill">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
         </div>
         <p class="text-white-50 small mb-3">ID de TheTVDB: <%= show.id %></p>
         <p class="lead text-light text-shadow opacity-90 mb-0"><%= show.overview %></p>
@@ -76,8 +87,19 @@
       <div>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           <h1 class="fw-black mb-0 text-gradient"><%= show.name %></h1>
-          <span class="badge bg-primary bg-opacity-25 text-primary-emphasis rounded-pill"><%= show.status %></span>
-          <span class="badge bg-warning bg-opacity-25 text-warning-emphasis rounded-pill">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
+          <% 
+            let statusTextStr = show.status;
+            let statusClassStr = 'bg-primary bg-opacity-25 text-primary-emphasis';
+            if (show.status && show.status.toLowerCase() === 'continuing') {
+              statusTextStr = 'En emisión';
+              statusClassStr = 'bg-success text-white';
+            } else if (show.status && show.status.toLowerCase() === 'ended') {
+              statusTextStr = 'Terminada';
+              statusClassStr = 'bg-danger text-white';
+            }
+          %>
+          <span class="badge <%= statusClassStr %> rounded-pill"><%= statusTextStr %></span>
+          <span class="badge text-purple rounded-pill" style="background-color: var(--bs-purple-alt) !important;">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
         </div>
         <p class="text-secondary small">ID de TheTVDB: <%= show.id %></p>
         <p class="lead text-secondary-emphasis"><%= show.overview %></p>
@@ -285,9 +307,10 @@
   // Manejar toggle de episodios individuales
   document.querySelectorAll('.episode-checkbox').forEach(chk => {
     chk.addEventListener('change', async (e) => {
-      const episodeId = e.currentTarget.value;
-      const isChecked = e.currentTarget.checked;
-      const seasonNum = e.currentTarget.dataset.seasonNumber;
+      const checkbox = e.currentTarget;
+      const episodeId = checkbox.value;
+      const isChecked = checkbox.checked;
+      const seasonNum = checkbox.dataset.seasonNumber;
 
       try {
         const response = await fetch('/episodes/toggle-watched', {
@@ -304,11 +327,11 @@
           // Actualizar contador de la temporada
           updateSeasonCounter(seasonNum);
         } else {
-          e.currentTarget.checked = !isChecked; // Deshacer cambio si falló
+          checkbox.checked = !isChecked; // Deshacer cambio si falló
         }
       } catch (err) {
         console.error(err);
-        e.currentTarget.checked = !isChecked;
+        checkbox.checked = !isChecked;
       }
     });
   });
@@ -316,9 +339,10 @@
   // Manejar toggle de temporadas completas
   document.querySelectorAll('.btn-season-toggle').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const seriesId = e.currentTarget.dataset.seriesId;
-      const seasonNumber = e.currentTarget.dataset.seasonNumber;
-      const currentWatched = e.currentTarget.dataset.watched === 'true';
+      const button = e.currentTarget;
+      const seriesId = button.dataset.seriesId;
+      const seasonNumber = button.dataset.seasonNumber;
+      const currentWatched = button.dataset.watched === 'true';
       const targetWatched = !currentWatched;
 
       try {
@@ -332,12 +356,16 @@
         if (data.success) {
           // Actualizar los checkboxes visualmente
           const checkboxes = document.querySelectorAll(`.episode-checkbox[data-season-number="${seasonNumber}"]`);
-          checkboxes.forEach(chk => chk.checked = targetWatched);
+          checkboxes.forEach(chk => {
+            if (chk.checked !== targetWatched) {
+              chk.checked = targetWatched;
+            }
+          });
 
           // Actualizar el botón
-          e.currentTarget.dataset.watched = targetWatched ? 'true' : 'false';
-          e.currentTarget.innerHTML = targetWatched ? 'Desmarcar temporada' : 'Completar temporada';
-          e.currentTarget.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
+          button.dataset.watched = targetWatched ? 'true' : 'false';
+          button.innerHTML = targetWatched ? 'Desmarcar temporada' : 'Completar temporada';
+          button.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
 
           // Actualizar barra de progreso
           updateSeriesProgress(data.seriesProgress);

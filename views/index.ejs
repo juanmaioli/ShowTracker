@@ -32,9 +32,17 @@
 </div>
 
 <!-- Listado de Series -->
-<h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
-  <span>📂</span> Series en Seguimiento
-</h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <h2 class="fs-4 fw-bold mb-0 d-flex align-items-center gap-2">
+    <span>📂</span> Series en Seguimiento
+  </h2>
+  <% if (shows.length > 0) { %>
+    <button id="toggle-completed-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
+      <span id="toggle-completed-icon">👁️</span>
+      <span id="toggle-completed-text">Ocultar completadas</span>
+    </button>
+  <% } %>
+</div>
 
 <% if (shows.length === 0) { %>
   <div class="row my-5">
@@ -48,34 +56,48 @@
 <% } else { %>
   <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
     <% shows.forEach(show => { %>
-      <div class="col">
+      <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
+      <div class="col" data-completed="<%= percentage === 100 %>">
         <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
           <!-- Poster (Clickable al detalle) -->
           <a href="/series/<%= show.id %>" class="d-block text-decoration-none">
             <div class="poster-container" style="aspect-ratio: 2/3;">
               <img src="<%= show.image %>" class="w-100 h-100 object-fit-cover poster-image" alt="<%= show.name %>" onerror="this.src='/img/placeholder.svg';">
-              <span class="position-absolute top-2 end-2 badge bg-dark bg-opacity-75 rounded-pill border border-secondary border-opacity-50" style="font-size: 0.75rem;">
+              <span class="position-absolute top-2 start-2 badge bg-dark bg-opacity-75 rounded-pill border border-secondary border-opacity-50" style="font-size: 0.75rem; z-index: 2;">
                 ⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %>
               </span>
+              <% if (percentage === 100) { %>
+                <div class="position-absolute top-0 end-0" style="width: 64px; height: 64px; background: linear-gradient(to bottom left, var(--bs-success) 50%, transparent 50%); z-index: 2;" title="Serie completada"></div>
+              <% } %>
             </div>
           </a>
           
           <!-- Contenido -->
           <div class="card-body p-2 d-flex flex-column flex-grow-1">
             <h3 class="card-title fs-6 fw-bold text-truncate mb-1"><%= show.name %></h3>
-            <span class="badge bg-secondary bg-opacity-25 text-secondary-emphasis align-self-start mb-2 rounded-pill" style="font-size: 0.7rem;">
-              <%= show.status %>
+            <% 
+              let statusText = show.status;
+              let statusClass = 'bg-secondary bg-opacity-25 text-secondary-emphasis';
+              if (show.status && show.status.toLowerCase() === 'continuing') {
+                statusText = 'En emisión';
+                statusClass = 'bg-success text-white';
+              } else if (show.status && show.status.toLowerCase() === 'ended') {
+                statusText = 'Terminada';
+                statusClass = 'bg-danger text-white';
+              }
+            %>
+            <span class="badge <%= statusClass %> align-self-start mb-2 rounded-pill" style="font-size: 0.7rem;">
+              <%= statusText %>
             </span>
             
             <div class="mt-auto">
               <!-- Progreso de la serie -->
-              <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
               <div class="d-flex justify-content-between mb-1 small text-secondary">
                 <span><%= show.watched_episodes %> / <%= show.total_episodes %> epis.</span>
                 <span><%= percentage %>%</span>
               </div>
               <div class="progress mb-3" style="height: 6px;">
-                <div class="progress-bar bg-primary rounded" role="progressbar" style="width: <%= percentage %>%" aria-valuenow="<%= percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar <%= percentage === 100 ? 'bg-success' : 'bg-primary' %> rounded" role="progressbar" style="width: <%= percentage %>%" aria-valuenow="<%= percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
               
               <div class="d-flex gap-2">
@@ -94,5 +116,50 @@
     <% }) %>
   </div>
 <% } %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggle-completed-btn');
+    if (!toggleBtn) return;
+
+    const btnText = document.getElementById('toggle-completed-text');
+    const btnIcon = document.getElementById('toggle-completed-icon');
+    const completedCards = document.querySelectorAll('[data-completed="true"]');
+
+    // Cargar preferencia guardada en localStorage
+    let hideCompleted = localStorage.getItem('hideCompletedSeries') === 'true';
+
+    function applyFilter() {
+      completedCards.forEach(card => {
+        if (hideCompleted) {
+          card.classList.add('d-none');
+        } else {
+          card.classList.remove('d-none');
+        }
+      });
+
+      if (hideCompleted) {
+        btnText.innerText = 'Mostrar completadas';
+        btnIcon.innerText = '👁️‍🗨️';
+        toggleBtn.classList.remove('btn-outline-secondary');
+        toggleBtn.classList.add('btn-success');
+      } else {
+        btnText.innerText = 'Ocultar completadas';
+        btnIcon.innerText = '👁';
+        toggleBtn.classList.add('btn-outline-secondary');
+        toggleBtn.classList.remove('btn-success');
+      }
+    }
+
+    // Aplicar filtro inicial
+    applyFilter();
+
+    toggleBtn.addEventListener('click', () => {
+      hideCompleted = !hideCompleted;
+      localStorage.setItem('hideCompletedSeries', hideCompleted);
+      applyFilter();
+    });
+  });
+</script>
 
 <%- include('partials/footer') %>
