@@ -32,10 +32,22 @@
 </div>
 
 <!-- Listado de Series -->
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-  <h2 class="fs-4 fw-bold mb-0 d-flex align-items-center gap-2">
-    <span>📂</span> Series en Seguimiento
-  </h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div class="d-flex flex-wrap align-items-center gap-3">
+    <h2 class="fs-4 fw-bold mb-0 d-flex align-items-center gap-2">
+      <span>📂</span> Series en Seguimiento
+    </h2>
+    <% if (shows.length > 0) { %>
+      <!-- Switch de Vista (Tarjetas / Lista) -->
+      <div class="btn-group btn-group-sm rounded-pill overflow-hidden border border-secondary border-opacity-25 bg-dark bg-opacity-30 p-0.5" role="group" id="view-mode-group">
+        <input type="radio" class="btn-check" name="viewMode" id="viewModeGrid" autocomplete="off" checked>
+        <label class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 border-0" for="viewModeGrid" style="font-size: 0.75rem; cursor: pointer;">🎴 Tarjetas</label>
+        
+        <input type="radio" class="btn-check" name="viewMode" id="viewModeList" autocomplete="off">
+        <label class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 border-0" for="viewModeList" style="font-size: 0.75rem; cursor: pointer;">📝 Lista</label>
+      </div>
+    <% } %>
+  </div>
   <% if (shows.length > 0) { %>
     <button id="toggle-completed-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
       <span id="toggle-completed-icon">👁️</span>
@@ -54,7 +66,8 @@
     </div>
   </div>
 <% } else { %>
-  <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+  <!-- Contenedor Vista Tarjetas (Grid) -->
+  <div id="view-grid-container" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
     <% shows.forEach(show => { %>
       <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
       <div class="col" data-completed="<%= percentage === 100 %>">
@@ -127,50 +140,176 @@
       </div>
     <% }) %>
   </div>
+
+  <!-- Vista de Lista Compacta -->
+  <div id="view-list-container" class="d-none">
+    <div class="card glass-card p-3 shadow rounded-4 border-0">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover table-borderless align-middle mb-0" style="--bs-table-bg: transparent;">
+          <thead>
+            <tr class="text-white-50 border-bottom border-secondary border-opacity-25" style="font-size: 0.8rem;">
+              <th scope="col" style="width: 60px;">Póster</th>
+              <th scope="col">Nombre</th>
+              <th scope="col" style="width: 100px;">Calificación</th>
+              <th scope="col" style="width: 130px;">Estado</th>
+              <th scope="col" style="width: 220px;">Progreso</th>
+              <th scope="col" class="text-end" style="width: 150px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% shows.forEach(show => { %>
+              <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
+              <tr data-completed="<%= percentage === 100 %>" class="border-bottom border-secondary border-opacity-10 py-2">
+                <!-- Póster -->
+                <td>
+                  <a href="/series/<%= show.id %>">
+                    <img src="<%= show.image %>" class="rounded-circle object-fit-cover shadow border border-secondary border-opacity-25" alt="<%= show.name %>" style="width: 40px; height: 40px;" onerror="this.src='/img/placeholder.svg';">
+                  </a>
+                </td>
+                
+                <!-- Nombre y Año -->
+                <td>
+                  <h4 class="fs-6 fw-bold mb-0">
+                    <a href="/series/<%= show.id %>" class="text-white text-decoration-none" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                      <%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %>
+                    </a>
+                  </h4>
+                </td>
+                
+                <!-- Calificación Propia -->
+                <td>
+                  <span class="fw-semibold text-purple">
+                    ⭐<%= show.user_score.toFixed(1) %>
+                  </span>
+                </td>
+                
+                <!-- Estado -->
+                <td>
+                  <% 
+                    let statusText = show.status;
+                    let statusClass = 'bg-secondary bg-opacity-25 text-secondary-emphasis';
+                    if (show.status && show.status.toLowerCase() === 'continuing') {
+                      statusText = 'En emisión';
+                      statusClass = 'bg-success text-white';
+                    } else if (show.status && show.status.toLowerCase() === 'ended') {
+                      statusText = 'Terminada';
+                      statusClass = 'bg-danger text-white';
+                    }
+                  %>
+                  <span class="badge <%= statusClass %> rounded-pill" style="font-size: 0.7rem;">
+                    <%= statusText %>
+                  </span>
+                </td>
+                
+                <!-- Progreso -->
+                <td>
+                  <div class="d-flex justify-content-between mb-1" style="font-size: 0.75rem;">
+                    <span class="text-white-50"><%= show.watched_episodes %> / <%= show.total_episodes %> epis.</span>
+                    <span class="<%= percentage === 100 ? 'text-success' : 'text-primary' %> fw-bold"><%= percentage %>%</span>
+                  </div>
+                  <div class="progress" style="height: 5px;">
+                    <div class="progress-bar <%= percentage === 100 ? 'bg-success' : 'bg-primary' %> rounded" role="progressbar" style="width: <%= percentage %>%" aria-valuenow="<%= percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </td>
+                
+                <!-- Acciones -->
+                <td class="text-end">
+                  <div class="d-inline-flex gap-2">
+                    <a href="/series/<%= show.id %>" class="btn btn-outline-primary btn-sm rounded-pill px-3" style="font-size: 0.75rem;">Ver</a>
+                    <form action="/series/eliminar" method="POST" onsubmit="return confirm('¿Seguro querés dejar de seguir esta serie? Se perderá el historial de vistos.');" class="mb-0">
+                      <input type="hidden" name="seriesId" value="<%= show.id %>">
+                      <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle px-2" title="Dejar de seguir" style="font-size: 0.75rem; width: 28px; height: 28px; padding: 0; line-height: 28px;">
+                        🗑️
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 <% } %>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const toggleBtn = document.getElementById('toggle-completed-btn');
-    if (!toggleBtn) return;
-
-    const btnText = document.getElementById('toggle-completed-text');
-    const btnIcon = document.getElementById('toggle-completed-icon');
-    const completedCards = document.querySelectorAll('[data-completed="true"]');
-
-    // Cargar preferencia guardada en localStorage
-    let hideCompleted = localStorage.getItem('hideCompletedSeries') === 'true';
-
-    function applyFilter() {
-      completedCards.forEach(card => {
-        if (hideCompleted) {
-          card.classList.add('d-none');
-        } else {
-          card.classList.remove('d-none');
-        }
-      });
-
-      if (hideCompleted) {
-        btnText.innerText = 'Mostrar completadas';
-        btnIcon.innerText = '👁️‍🗨️';
-        toggleBtn.classList.remove('btn-outline-secondary');
-        toggleBtn.classList.add('btn-success');
+    const viewGridBtn = document.getElementById('viewModeGrid');
+    const viewListBtn = document.getElementById('viewModeList');
+    const gridContainer = document.getElementById('view-grid-container');
+    const listContainer = document.getElementById('view-list-container');
+    
+    // Cargar preferencia de modo de vista
+    let currentViewMode = localStorage.getItem('showtracker_view_mode') || 'grid';
+    
+    function applyViewMode() {
+      if (!gridContainer || !listContainer) return;
+      if (currentViewMode === 'list') {
+        gridContainer.classList.add('d-none');
+        listContainer.classList.remove('d-none');
+        if (viewListBtn) viewListBtn.checked = true;
       } else {
-        btnText.innerText = 'Ocultar completadas';
-        btnIcon.innerText = '👁';
-        toggleBtn.classList.add('btn-outline-secondary');
-        toggleBtn.classList.remove('btn-success');
+        gridContainer.classList.remove('d-none');
+        listContainer.classList.add('d-none');
+        if (viewGridBtn) viewGridBtn.checked = true;
       }
     }
+    
+    if (viewGridBtn && viewListBtn) {
+      applyViewMode();
+      viewGridBtn.addEventListener('change', () => {
+        currentViewMode = 'grid';
+        localStorage.setItem('showtracker_view_mode', 'grid');
+        applyViewMode();
+      });
+      viewListBtn.addEventListener('change', () => {
+        currentViewMode = 'list';
+        localStorage.setItem('showtracker_view_mode', 'list');
+        applyViewMode();
+      });
+    }
 
-    // Aplicar filtro inicial
-    applyFilter();
+    if (toggleBtn) {
+      const btnText = document.getElementById('toggle-completed-text');
+      const btnIcon = document.getElementById('toggle-completed-icon');
+      
+      // Cargar preferencia guardada en localStorage
+      let hideCompleted = localStorage.getItem('hideCompletedSeries') === 'true';
 
-    toggleBtn.addEventListener('click', () => {
-      hideCompleted = !hideCompleted;
-      localStorage.setItem('hideCompletedSeries', hideCompleted);
+      function applyFilter() {
+        const completedElements = document.querySelectorAll('[data-completed="true"]');
+        completedElements.forEach(el => {
+          if (hideCompleted) {
+            el.classList.add('d-none');
+          } else {
+            el.classList.remove('d-none');
+          }
+        });
+
+        if (hideCompleted) {
+          btnText.innerText = 'Mostrar completadas';
+          btnIcon.innerText = '👁️‍🗨️';
+          toggleBtn.classList.remove('btn-outline-secondary');
+          toggleBtn.classList.add('btn-success');
+        } else {
+          btnText.innerText = 'Ocultar completadas';
+          btnIcon.innerText = '👁';
+          toggleBtn.classList.add('btn-outline-secondary');
+          toggleBtn.classList.remove('btn-success');
+        }
+      }
+
+      // Aplicar filtro inicial
       applyFilter();
-    });
+
+      toggleBtn.addEventListener('click', () => {
+        hideCompleted = !hideCompleted;
+        localStorage.setItem('hideCompletedSeries', hideCompleted);
+        applyFilter();
+      });
+    }
   });
 </script>
 
