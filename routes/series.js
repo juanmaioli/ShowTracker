@@ -381,6 +381,202 @@ router.post('/seguir', async (req, res) => {
   }
 });
 
+// Actualizar datos de la serie (sincronizar con TheTVDB v4 conservando el historial del usuario)
+router.post('/:id/actualizar', async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ success: false, error: 'ID de serie inválido.' });
+  }
+
+  try {
+    // Buscar datos completos en TheTVDB
+    const { series, episodes } = await getSeriesExtended(id);
+    if (!series) {
+      return res.status(404).json({ success: false, error: 'La serie no existe en TheTVDB.' });
+    }
+
+    // Descargar poster e imagen de fondo
+    const localImagePath = await downloadSeriesImage(series.image || series.thumbnail, id, 'posters');
+    let bgUrl = null;
+    if (series.artworks && Array.isArray(series.artworks)) {
+      const bgArtwork = series.artworks.find(art => 
+        art.type === 3 || 
+        String(art.type).toLowerCase() === 'background' || 
+        String(art.type).toLowerCase() === 'fanart'
+      );
+      if (bgArtwork) {
+        bgUrl = bgArtwork.image || bgArtwork.thumbnail;
+      }
+    }
+    const localBgPath = bgUrl ? await downloadSeriesImage(bgUrl, id, 'backgrounds') : null;
+
+    // Calcular la calificación a guardar (promedio local, fallback a TVDB)
+    const avgRow = db.prepare('SELECT AVG(rating) as average FROM season_ratings WHERE series_id = ?').get(id);
+    const newScore = avgRow.average !== null ? avgRow.average : (series.score ? (series.score / 2) : 0);
+
+    // Actualizar Serie en base de datos
+    db.prepare(`
+      UPDATE series 
+      SET name = ?, slug = ?, image = ?, background = ?, status = ?, overview = ?, score = ?
+      WHERE id = ?
+    `).run(
+      getLocalized(series, 'name', 'Serie sin título'),
+      series.slug || '',
+      localImagePath,
+      localBgPath,
+      series.status?.name || 'Unknown',
+      getLocalized(series, 'overview', 'Sin descripción disponible.'),
+      newScore,
+      id
+    );
+
+    // Eliminar artworks y cast viejos para no duplicar
+    db.prepare('DELETE FROM artworks WHERE series_id = ?').run(id);
+    db.prepare('DELETE FROM series_cast WHERE series_id = ?').run(id);
+
+    // Descargar y guardar posters en paralelo (lotes de 8)
+    if (series.artworks && Array.isArray(series.artworks)) {
+      const insertArtwork = db.prepare(`
+        INSERT INTO artworks (series_id, type, image)
+        VALUES (?, ?, ?)
+      `);
+
+      const posters = series.artworks.filter(art => 
+        art.type === 2 || String(art.type).toLowerCase() === 'poster'
+      );
+
+      const downloadedPosters = [];
+      const posterChunks = [];
+      for (let i = 0; i < posters.length; i += 8) {
+        posterChunks.push(posters.slice(i, i + 8));
+      }
+
+      for (let c = 0; c < posterChunks.length; c++) {
+        const chunk = posterChunks[c];
+        await Promise.all(chunk.map(async (art, idx) => {
+          const absoluteIndex = c * 8 + idx;
+          const artUrl = art.image || art.thumbnail;
+          if (artUrl) {
+            try {
+              const filenameId = `${id}-poster-${art.id || absoluteIndex}`;
+              const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'posters');
+              downloadedPosters.push(localArtPath);
+            } catch (err) {
+              console.error(`Error actualizando poster ${absoluteIndex} para serie ${id}:`, err.message);
+            }
+          }
+        }));
+      }
+
+      for (const p of downloadedPosters) {
+        insertArtwork.run(id, 'poster', p);
+      }
+
+      // Backgrounds
+      const backgrounds = series.artworks.filter(art => 
+        art.type === 3 || 
+        String(art.type).toLowerCase() === 'background' || 
+        String(art.type).toLowerCase() === 'fanart'
+      );
+
+      const downloadedBackgrounds = [];
+      const bgChunks = [];
+      for (let i = 0; i < backgrounds.length; i += 8) {
+        bgChunks.push(backgrounds.slice(i, i + 8));
+      }
+
+      for (let c = 0; c < bgChunks.length; c++) {
+        const chunk = bgChunks[c];
+        await Promise.all(chunk.map(async (art, idx) => {
+          const absoluteIndex = c * 8 + idx;
+          const artUrl = art.image || art.thumbnail;
+          if (artUrl) {
+            try {
+              const filenameId = `${id}-bg-${art.id || absoluteIndex}`;
+              const localArtPath = await downloadSeriesImage(artUrl, filenameId, 'backgrounds');
+              downloadedBackgrounds.push(localArtPath);
+            } catch (err) {
+              console.error(`Error actualizando background ${absoluteIndex} para serie ${id}:`, err.message);
+            }
+          }
+        }));
+      }
+
+      for (const bg of downloadedBackgrounds) {
+        insertArtwork.run(id, 'background', bg);
+      }
+    }
+
+    // Guardar el elenco (cast)
+    if (series.characters && Array.isArray(series.characters)) {
+      const insertCast = db.prepare(`
+        INSERT INTO series_cast (series_id, actor_name, character_name, image, sort_order)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+
+      const characters = series.characters.slice(0, 12);
+      const downloadedCast = [];
+
+      await Promise.all(characters.map(async (char, i) => {
+        const actorName = char.personName || 'Actor Desconocido';
+        const charName = char.name || 'Personaje Desconocido';
+        const imgUrl = char.image || char.personImgURL;
+        
+        let localCastImgPath = null;
+        if (imgUrl) {
+          try {
+            const filenameId = `${id}-actor-${char.id || i}`;
+            localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
+          } catch (err) {
+            localCastImgPath = '/img/cast-placeholder.svg';
+          }
+        } else {
+          localCastImgPath = '/img/cast-placeholder.svg';
+        }
+        downloadedCast.push({ actorName, charName, localCastImgPath, sort: char.sort || i });
+      }));
+
+      for (const item of downloadedCast) {
+        insertCast.run(id, item.actorName, item.character_name || item.charName, item.localCastImgPath, item.sort);
+      }
+    }
+
+    // Guardar Episodios preservando la columna "watched" en caso de conflicto de clave primaria
+    const insertEpisode = db.prepare(`
+      INSERT INTO episodes (id, series_id, name, season_number, episode_number, air_date, overview, watched)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        season_number = excluded.season_number,
+        episode_number = excluded.episode_number,
+        air_date = excluded.air_date,
+        overview = excluded.overview
+    `);
+
+    const insertMany = db.transaction((eps) => {
+      for (const ep of eps) {
+        if (ep.seasonNumber === undefined || ep.number === undefined) continue;
+        insertEpisode.run(
+          ep.id,
+          id,
+          getLocalized(ep, 'name', `Episodio ${ep.number}`),
+          ep.seasonNumber,
+          ep.number,
+          ep.aired || null,
+          getLocalized(ep, 'overview', 'Sin descripción disponible.')
+        );
+      }
+    });
+
+    insertMany(episodes);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al actualizar la serie:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Eliminar serie del seguimiento
 router.post('/eliminar', (req, res) => {
   const { seriesId } = req.body;

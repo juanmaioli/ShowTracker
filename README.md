@@ -24,6 +24,7 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 *   **Insignias de Puntuación Violetas:** Las insignias de puntuación (score) fueron rediseñadas con color violeta (`purple`) para integrarse con la paleta de colores premium de la app.
 *   **Dashboard Optimizado:** Grilla de 6 columnas en resoluciones de pantalla grandes ordenadas alfabéticamente.
 *   **Alternancia de Vistas (Grid / Lista):** Selector al lado del título que alterna entre la grilla de tarjetas y una lista compacta con póster circular, guardando la preferencia en `localStorage`.
+*   **Sincronización Manual de Series:** Botón "Actualizar" en el detalle de la serie que vuelve a importar metadatos, elenco y artworks con TheTVDB v4, agregando nuevos episodios y preservando intacto el historial de vistos (`watched`).
 *   **Estadísticas de Consumo de API:** Control detallado de cuota de la API (límite anual de 50.000 llamadas) y contador del tiempo total de visualización de episodios del usuario.
 *   **Mejoras de Accesibilidad (Alto Contraste):** Eliminación total de las clases de texto secundario/atenuado (`text-secondary` y `text-light` para textos descriptivos) en todas las vistas de la aplicación para garantizar la máxima legibilidad y contraste, facilitando el uso para personas con visión reducida.
 *   **Enlaces Directos a TheTVDB:** Los identificadores de serie en la vista de detalle ahora enlazan de forma directa a sus páginas correspondientes en TheTVDB, abriéndose en pestañas nuevas.

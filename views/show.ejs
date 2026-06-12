@@ -24,6 +24,10 @@
       <div class="col-md-8 col-lg-9 text-white">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           <h1 class="fw-black mb-0 display-5 text-shadow"><%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %></h1>
+          <button class="btn btn-outline-light btn-sm rounded-pill px-3 d-flex align-items-center gap-1 btn-update-series-action shadow-sm" data-series-id="<%= show.id %>" style="transition: all 0.3s ease;">
+            <span class="update-icon">🔄</span>
+            <span class="update-text">Actualizar</span>
+          </button>
           <% 
             let statusText = show.status;
             let statusClass = 'bg-primary bg-opacity-75';
@@ -87,6 +91,10 @@
       <div>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           <h1 class="fw-black mb-0 text-gradient"><%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %></h1>
+          <button class="btn btn-outline-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1 btn-update-series-action shadow-sm" data-series-id="<%= show.id %>" style="transition: all 0.3s ease;">
+            <span class="update-icon">🔄</span>
+            <span class="update-text">Actualizar</span>
+          </button>
           <% 
             let statusTextStr = show.status;
             let statusClassStr = 'bg-primary bg-opacity-25 text-primary-emphasis';
@@ -629,6 +637,48 @@
         }
       });
     });
+
+    // Lógica para el botón de actualizar serie
+    document.querySelectorAll('.btn-update-series-action').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const seriesId = btn.dataset.seriesId;
+        const icon = btn.querySelector('.update-icon');
+        const text = btn.querySelector('.update-text');
+        
+        btn.disabled = true;
+        if (text) text.innerText = 'Actualizando...';
+        if (icon) {
+          icon.style.display = 'inline-block';
+          icon.style.animation = 'spin 1.2s linear infinite';
+        }
+        
+        try {
+          const response = await fetch(`/series/${seriesId}/actualizar`, {
+            method: 'POST'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
+          }
+          
+          const data = await response.json();
+          if (data.success) {
+            window.location.reload();
+          } else {
+            throw new Error(data.error || 'Error desconocido');
+          }
+        } catch (err) {
+          console.error('Error al actualizar la serie:', err);
+          alert(`Error al actualizar la serie: ${err.message}`);
+          
+          btn.disabled = false;
+          if (text) text.innerText = 'Actualizar';
+          if (icon) {
+            icon.style.animation = 'none';
+          }
+        }
+      });
+    });
   });
 </script>
 
@@ -646,6 +696,10 @@
   }
   .accordion-toggle-arrow[aria-expanded="true"] .collapse-icon {
     transform: rotate(180deg);
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 </style>
 
