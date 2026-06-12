@@ -1,0 +1,24 @@
+{
+  "name": "showtracker",
+  "version": "1.0.0",
+  "description": "Seguimiento de series de televisión usando TheTVDB v4, SQLite y Bootstrap 5.3",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "keywords": [
+    "tvdb",
+    "series",
+    "tracker"
+  ],
+  "author": "Juan Gabriel Maioli",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2"
+  }
+}

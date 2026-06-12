@@ -1,0 +1,347 @@
+<%- include('partials/header') %>
+
+<% if (show.background) { %>
+<!-- Cabecera Premium con Background y Efecto Blur -->
+<div class="position-relative rounded-4 overflow-hidden mb-5 shadow border border-secondary border-opacity-10" style="min-height: 380px;">
+  <!-- Imagen de fondo -->
+  <div class="position-absolute top-0 start-0 w-100 h-100" style="background-image: url('<%= show.background %>'); background-size: cover; background-position: center; filter: blur(6px) brightness(0.4); transform: scale(1.03); z-index: 1;"></div>
+  
+  <!-- Contenido superior -->
+  <div class="position-relative p-4 p-md-5 d-flex flex-column justify-content-between h-100" style="z-index: 2; min-height: 380px; background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.3) 100%);">
+    <div class="row g-4 align-items-center flex-grow-1">
+      <!-- Poster -->
+      <div class="col-md-4 col-lg-3 text-center text-md-start">
+        <img src="<%= show.image %>" class="img-fluid rounded-3 shadow-lg border border-secondary border-opacity-25 poster-image" style="max-height: 280px; aspect-ratio: 2/3; object-fit: cover;" alt="<%= show.name %>" onerror="this.src='/img/placeholder.svg';">
+        
+        <form action="/series/eliminar" method="POST" class="mt-3 mb-0" onsubmit="return confirm('¿De verdad querés dejar de seguir esta serie? Se borrará todo el historial.');">
+          <input type="hidden" name="seriesId" value="<%= show.id %>">
+          <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-pill py-1">
+            🗑️ Dejar de seguir
+          </button>
+        </form>
+      </div>
+      <!-- Detalles -->
+      <div class="col-md-8 col-lg-9 text-white">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <h1 class="fw-black mb-0 display-5 text-shadow"><%= show.name %></h1>
+          <span class="badge bg-primary bg-opacity-75 rounded-pill"><%= show.status %></span>
+          <span class="badge bg-warning text-dark rounded-pill">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
+        </div>
+        <p class="text-white-50 small mb-3">ID de TheTVDB: <%= show.id %></p>
+        <p class="lead text-light text-shadow opacity-90 mb-0"><%= show.overview %></p>
+      </div>
+    </div>
+
+    <!-- Barra de progreso dentro del banner -->
+    <div class="mt-4 bg-black bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25">
+      <h5 class="fs-6 fw-bold text-white mb-2">Progreso de la Serie</h5>
+      <div class="d-flex align-items-center gap-3">
+        <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
+          <div id="series-progress-bar" class="progress-bar bg-success rounded-pill" role="progressbar" style="width: <%= progress.percentage %>%" aria-valuenow="<%= progress.percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <span id="series-progress-text" class="fw-semibold text-success small">
+          <%= progress.watched %> / <%= progress.total %> (<%= progress.percentage %>%)
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+<% } else { %>
+<!-- Cabecera estándar sin Background -->
+<div class="row g-4 mb-5">
+  <!-- Poster de la serie -->
+  <div class="col-md-4 col-lg-3 text-center text-md-start">
+    <div class="card glass-card border-0 rounded-4 overflow-hidden shadow">
+      <img src="<%= show.image %>" class="w-100 object-fit-cover" alt="<%= show.name %>" onerror="this.src='/img/placeholder.svg';">
+    </div>
+    
+    <form action="/series/eliminar" method="POST" class="mt-3" onsubmit="return confirm('¿De verdad querés dejar de seguir esta serie? Se borrará todo el historial.');">
+      <input type="hidden" name="seriesId" value="<%= show.id %>">
+      <button type="submit" class="btn btn-outline-danger w-100 rounded-pill">
+        🗑️ Dejar de seguir serie
+      </button>
+    </form>
+  </div>
+
+  <!-- Detalles de la serie -->
+  <div class="col-md-8 col-lg-9">
+    <div class="d-flex flex-column h-100 justify-content-between">
+      <div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <h1 class="fw-black mb-0 text-gradient"><%= show.name %></h1>
+          <span class="badge bg-primary bg-opacity-25 text-primary-emphasis rounded-pill"><%= show.status %></span>
+          <span class="badge bg-warning bg-opacity-25 text-warning-emphasis rounded-pill">⭐ <%= show.score ? show.score.toFixed(1) : '0.0' %></span>
+        </div>
+        <p class="text-secondary small">ID de TheTVDB: <%= show.id %></p>
+        <p class="lead text-secondary-emphasis"><%= show.overview %></p>
+      </div>
+
+      <!-- Barra de progreso general -->
+      <div class="card glass-card p-3 rounded-3 mt-4 border-secondary border-opacity-25 shadow-sm">
+        <h5 class="fs-6 fw-bold mb-2">Progreso de la Serie</h5>
+        <div class="d-flex align-items-center gap-3">
+          <div class="progress flex-grow-1 rounded-pill" style="height: 10px;">
+            <div id="series-progress-bar" class="progress-bar bg-success rounded-pill" role="progressbar" style="width: <%= progress.percentage %>%" aria-valuenow="<%= progress.percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <span id="series-progress-text" class="fw-semibold text-success small">
+            <%= progress.watched %> / <%= progress.total %> (<%= progress.percentage %>%)
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- Acordeón de Temporadas -->
+<h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
+  <span>📅</span> Temporadas y Episodios
+</h2>
+
+<div class="accordion accordion-flush rounded-4 overflow-hidden border border-secondary border-opacity-25" id="seasonsAccordion">
+  <% seasons.forEach((season, index) => { 
+     const seasonTotal = season.episodes.length;
+     const seasonWatched = season.episodes.filter(e => e.watched === 1).length;
+     const allWatched = seasonTotal === seasonWatched;
+  %>
+    <div class="accordion-item bg-dark bg-opacity-50">
+      <h2 class="accordion-header">
+        <div class="accordion-button bg-dark bg-opacity-25 text-light border-bottom border-secondary border-opacity-10 d-flex flex-wrap justify-content-between align-items-center gap-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeason-<%= season.number %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-5">📁</span>
+            <span class="fw-bold"><%= season.name %></span>
+          </div>
+          
+          <div class="d-flex align-items-center gap-3 ms-auto me-3 py-1" onclick="event.stopPropagation()">
+            <!-- Contador de la temporada -->
+            <span id="season-count-<%= season.number %>" class="badge bg-secondary bg-opacity-50 text-secondary-emphasis rounded-pill small">
+              <%= seasonWatched %> / <%= seasonTotal %> vistos
+            </span>
+            <!-- Botón para marcar temporada completa -->
+            <button class="btn btn-sm <%= allWatched ? 'btn-outline-warning' : 'btn-outline-success' %> rounded-pill py-0 px-2 btn-season-toggle" 
+                    data-series-id="<%= show.id %>" 
+                    data-season-number="<%= season.number %>" 
+                    data-watched="<%= allWatched ? 'true' : 'false' %>">
+              <%= allWatched ? 'Desmarcar temporada' : 'Completar temporada' %>
+            </button>
+          </div>
+        </div>
+      </h2>
+      
+      <div id="collapseSeason-<%= season.number %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" data-bs-parent="#seasonsAccordion">
+        <div class="accordion-body p-0">
+          <div class="list-group list-group-flush">
+            <% season.episodes.forEach(ep => { %>
+              <div class="list-group-item bg-dark bg-opacity-10 text-light border-bottom border-secondary border-opacity-10 d-flex align-items-center gap-3 p-3">
+                <!-- Checkbox -->
+                <div class="form-check fs-5 mb-0">
+                  <input class="form-check-input episode-checkbox cursor-pointer" type="checkbox" 
+                         value="<%= ep.id %>" 
+                         id="ep-<%= ep.id %>" 
+                         data-season-number="<%= ep.season_number %>"
+                         <%= ep.watched === 1 ? 'checked' : '' %>>
+                </div>
+                
+                <!-- Info Episodio -->
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <label class="form-check-label fw-semibold cursor-pointer" for="ep-<%= ep.id %>">
+                      Episodio <%= ep.episode_number %>: <%= ep.name %>
+                    </label>
+                    <% if (ep.air_date) { %>
+                      <span class="text-secondary small"><%= ep.air_date %></span>
+                    <% } %>
+                  </div>
+                  <% if (ep.overview) { %>
+                    <p class="text-secondary small mb-0 mt-1"><%= ep.overview %></p>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<% if ((artworks.posters && artworks.posters.length > 0) || (artworks.backgrounds && artworks.backgrounds.length > 0)) { %>
+<!-- Galería de la Serie -->
+<div class="card glass-card p-4 rounded-4 shadow border-0 mt-5 mb-4">
+  <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
+    <span>🖼️</span> Galería de Artworks locales
+  </h2>
+
+  <!-- Pestañas -->
+  <ul class="nav nav-pills mb-4 gap-2" id="galleryTabs" role="tablist">
+    <% if (artworks.backgrounds && artworks.backgrounds.length > 0) { %>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active rounded-pill px-4" id="bg-tab" data-bs-toggle="tab" data-bs-target="#bg-tab-pane" type="button" role="tab" aria-controls="bg-tab-pane" aria-selected="true">
+          Fondos de Pantalla (<%= artworks.backgrounds.length %>)
+        </button>
+      </li>
+    <% } %>
+    <% if (artworks.posters && artworks.posters.length > 0) { %>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link <%= (!artworks.backgrounds || artworks.backgrounds.length === 0) ? 'active' : '' %> rounded-pill px-4" id="posters-tab" data-bs-toggle="tab" data-bs-target="#posters-tab-pane" type="button" role="tab" aria-controls="posters-tab-pane" aria-selected="false">
+          Posters Alternativos (<%= artworks.posters.length %>)
+        </button>
+      </li>
+    <% } %>
+  </ul>
+
+  <!-- Contenido de las pestañas -->
+  <div class="tab-content" id="galleryTabsContent">
+    <% if (artworks.backgrounds && artworks.backgrounds.length > 0) { %>
+      <div class="tab-pane fade show active" id="bg-tab-pane" role="tabpanel" aria-labelledby="bg-tab" tabindex="0">
+        <!-- Carrusel de Backgrounds -->
+        <div id="carouselBackgrounds" class="carousel slide carousel-fade rounded-3 overflow-hidden shadow" data-bs-ride="carousel">
+          <div class="carousel-inner rounded-3" style="max-height: 500px;">
+            <% artworks.backgrounds.forEach((bg, idx) => { %>
+              <div class="carousel-item <%= idx === 0 ? 'active' : '' %>" style="aspect-ratio: 16/9; max-height: 500px;">
+                <img src="<%= bg %>" class="d-block w-100 object-fit-cover h-100" alt="Fondo de <%= show.name %>">
+              </div>
+            <% }) %>
+          </div>
+          <% if (artworks.backgrounds.length > 1) { %>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselBackgrounds" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Siguiente</span>
+            </button>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (artworks.posters && artworks.posters.length > 0) { %>
+      <div class="tab-pane fade <%= (!artworks.backgrounds || artworks.backgrounds.length === 0) ? 'show active' : '' %>" id="posters-tab-pane" role="tabpanel" aria-labelledby="posters-tab" tabindex="0">
+        <!-- Grid de Posters Alternativos -->
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+          <% artworks.posters.forEach((poster, idx) => { %>
+            <div class="col">
+              <div class="card bg-dark border-secondary border-opacity-25 rounded-3 overflow-hidden shadow-sm h-100">
+                <img src="<%= poster %>" class="w-100 object-fit-cover" style="aspect-ratio: 2/3;" alt="Poster de <%= show.name %>" onerror="this.src='/img/placeholder.svg';">
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
+<script>
+  // Manejar toggle de episodios individuales
+  document.querySelectorAll('.episode-checkbox').forEach(chk => {
+    chk.addEventListener('change', async (e) => {
+      const episodeId = e.target.value;
+      const isChecked = e.target.checked;
+      const seasonNum = e.target.dataset.seasonNumber;
+
+      try {
+        const response = await fetch('/episodes/toggle-watched', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ episodeId })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          // Actualizar barra de progreso de la serie
+          updateSeriesProgress(data.seriesProgress);
+          
+          // Actualizar contador de la temporada
+          updateSeasonCounter(seasonNum);
+        } else {
+          e.target.checked = !isChecked; // Deshacer cambio si falló
+        }
+      } catch (err) {
+        console.error(err);
+        e.target.checked = !isChecked;
+      }
+    });
+  });
+
+  // Manejar toggle de temporadas completas
+  document.querySelectorAll('.btn-season-toggle').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const seriesId = e.target.dataset.seriesId;
+      const seasonNumber = e.target.dataset.seasonNumber;
+      const currentWatched = e.target.dataset.watched === 'true';
+      const targetWatched = !currentWatched;
+
+      try {
+        const response = await fetch('/episodes/toggle-season', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seriesId, seasonNumber, watched: targetWatched })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // Actualizar los checkboxes visualmente
+          const checkboxes = document.querySelectorAll(`.episode-checkbox[data-season-number="${seasonNumber}"]`);
+          checkboxes.forEach(chk => chk.checked = targetWatched);
+
+          // Actualizar el botón
+          e.target.dataset.watched = targetWatched ? 'true' : 'false';
+          e.target.innerHTML = targetWatched ? 'Desmarcar temporada' : 'Completar temporada';
+          e.target.className = `btn btn-sm ${targetWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
+
+          // Actualizar barra de progreso
+          updateSeriesProgress(data.seriesProgress);
+
+          // Actualizar contador
+          const countBadge = document.getElementById(`season-count-${seasonNumber}`);
+          const total = checkboxes.length;
+          countBadge.innerText = `${targetWatched ? total : 0} / ${total} vistos`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+
+  function updateSeriesProgress(progress) {
+    const bar = document.getElementById('series-progress-bar');
+    const txt = document.getElementById('series-progress-text');
+    if (bar && txt) {
+      bar.style.width = `${progress.percentage}%`;
+      bar.setAttribute('aria-valuenow', progress.percentage);
+      txt.innerText = `${progress.watched} / ${progress.total} (${progress.percentage}%)`;
+    }
+  }
+
+  function updateSeasonCounter(seasonNum) {
+    const checkboxes = document.querySelectorAll(`.episode-checkbox[data-season-number="${seasonNum}"]`);
+    const total = checkboxes.length;
+    const watched = Array.from(checkboxes).filter(chk => chk.checked).length;
+    
+    const countBadge = document.getElementById(`season-count-${seasonNum}`);
+    if (countBadge) {
+      countBadge.innerText = `${watched} / ${total} vistos`;
+    }
+
+    // Actualizar también el estado del botón de temporada
+    const btn = document.querySelector(`.btn-season-toggle[data-season-number="${seasonNum}"]`);
+    if (btn) {
+      const allWatched = total === watched;
+      btn.dataset.watched = allWatched ? 'true' : 'false';
+      btn.innerHTML = allWatched ? 'Desmarcar temporada' : 'Completar temporada';
+      btn.className = `btn btn-sm ${allWatched ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill py-0 px-2 btn-season-toggle`;
+    }
+  }
+</script>
+
+<style>
+  .cursor-pointer {
+    cursor: pointer;
+  }
+</style>
+
+<%- include('partials/footer') %>

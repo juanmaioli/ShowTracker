@@ -1,0 +1,140 @@
+<%- include('partials/header') %>
+
+<h1 class="fw-black mb-5 text-gradient">📊 Estadísticas</h1>
+
+<div class="row g-4 mb-5">
+  <!-- Tarjetas de Estadísticas de Usuario -->
+  <div class="col-md-6 col-lg-3">
+    <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
+      <div class="fs-1 mb-2">📺</div>
+      <h3 class="fs-6 text-secondary uppercase fw-semibold mb-1">Series Seguidas</h3>
+      <p class="display-6 fw-bold mb-0 text-primary"><%= userStats.totalShows %></p>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-3">
+    <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
+      <div class="fs-1 mb-2">🎬</div>
+      <h3 class="fs-6 text-secondary uppercase fw-semibold mb-1">Episodios Vistos</h3>
+      <p class="display-6 fw-bold mb-0 text-success">
+        <%= userStats.watchedEpisodes %> <span class="fs-6 text-secondary">/ <%= userStats.totalEpisodes %></span>
+      </p>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-3">
+    <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
+      <div class="fs-1 mb-2">⏱️</div>
+      <h3 class="fs-6 text-secondary uppercase fw-semibold mb-1">Tiempo de Pantalla</h3>
+      <p class="display-6 fw-bold mb-0 text-info">
+        <%= userStats.totalHoursWatched %> <span class="fs-6 text-secondary">horas</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-3">
+    <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
+      <div class="fs-1 mb-2">🏆</div>
+      <h3 class="fs-6 text-secondary uppercase fw-semibold mb-1">Series Completadas</h3>
+      <p class="display-6 fw-bold mb-0 text-warning"><%= userStats.completedShowsCount %></p>
+    </div>
+  </div>
+</div>
+
+<!-- Estadísticas de la API -->
+<div class="row g-4 mb-5">
+  <div class="col-lg-8">
+    <div class="card glass-card p-4 rounded-4 shadow border-0">
+      <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
+        <span>🌐</span> Consumo de API TheTVDB v4
+      </h2>
+      
+      <!-- Progreso Anual contra el Límite -->
+      <div class="mb-4">
+        <div class="d-flex justify-content-between mb-2 small fw-semibold">
+          <span class="text-secondary">Uso del Límite Anual (50.000 consultas)</span>
+          <span class="text-info"><%= apiStats.year %> / <%= apiStats.limit %> (<%= apiStats.percentageUsed %>%)</span>
+        </div>
+        <div class="progress rounded-pill" style="height: 14px;">
+          <% 
+            let progressBarColor = 'bg-info';
+            if (apiStats.percentageUsed > 75) progressBarColor = 'bg-warning';
+            if (apiStats.percentageUsed > 90) progressBarColor = 'bg-danger';
+          %>
+          <div class="progress-bar progress-bar-striped <%= progressBarColor %> rounded-pill" role="progressbar" style="width: <%= Math.min(apiStats.percentageUsed, 100) %>%" aria-valuenow="<%= apiStats.year %>" aria-valuemin="0" aria-valuemax="<%= apiStats.limit %>"></div>
+        </div>
+      </div>
+
+      <div class="row g-3 text-center">
+        <div class="col-6 col-md-4">
+          <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
+            <span class="text-secondary small d-block">Consultas Hoy</span>
+            <strong class="fs-4 text-light"><%= apiStats.today %></strong>
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
+            <span class="text-secondary small d-block">Consultas este Mes</span>
+            <strong class="fs-4 text-light"><%= apiStats.month %></strong>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
+            <span class="text-secondary small d-block">Consultas este Año</span>
+            <strong class="fs-4 text-light"><%= apiStats.year %></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Explicación de la cuota -->
+  <div class="col-lg-4">
+    <div class="card glass-card p-4 rounded-4 shadow border-0 h-100">
+      <h3 class="fs-5 fw-bold mb-3 text-warning">⚠️ Acerca del Límite</h3>
+      <p class="text-secondary small">Tu clave de API de TheTVDB v4 cuenta con un límite estricto de **50.000 solicitudes al año**.</p>
+      <p class="text-secondary small">Para optimizar tu consumo y evitar cargos, ShowTracker aplica las siguientes técnicas:</p>
+      <ul class="text-secondary small ps-3">
+        <li>Guarda localmente la metadata de las series y episodios una vez consultados.</li>
+        <li>Descarga las imágenes a la carpeta local para no hacer peticiones repetidas.</li>
+        <li>Actualiza la información solo cuando lo decidas de forma manual.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Tabla de Registros Recientes -->
+<h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
+  <span>📜</span> Historial Reciente de Consultas
+</h2>
+
+<div class="card glass-card rounded-4 border-0 overflow-hidden shadow mb-5">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead>
+        <tr class="table-black">
+          <th scope="col" class="ps-4">Fecha</th>
+          <th scope="col">Endpoint / Acción</th>
+          <th scope="col" class="text-end pe-4">Cantidad de Llamadas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (apiLogs.length === 0) { %>
+          <tr>
+            <td colspan="3" class="text-center py-4 text-secondary">Aún no se registraron llamadas a la API.</td>
+          </tr>
+        <% } else { %>
+          <% apiLogs.forEach(log => { %>
+            <tr>
+              <td class="ps-4 text-secondary"><%= log.date %></td>
+              <td><code><%= log.type %></code></td>
+              <td class="text-end pe-4 fw-bold text-info"><%= log.calls %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,78 @@
+<%- include('partials/header') %>
+
+<div class="row justify-content-center mb-5">
+  <div class="col-md-8">
+    <div class="card glass-card p-4 rounded-4 shadow">
+      <h1 class="fs-3 fw-bold mb-3 d-flex align-items-center gap-2">
+        <span>🔍</span> Buscar Series en TheTVDB
+      </h1>
+      <form action="/series/buscar" method="GET" class="d-flex gap-2">
+        <input type="text" name="q" value="<%= query %>" placeholder="Ej: Breaking Bad, Game of Thrones..." class="form-control form-control-lg rounded-pill bg-dark border-secondary bg-opacity-50" required autofocus>
+        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-4">Buscar</button>
+      </form>
+      <% if (errorMsg) { %>
+        <div class="alert alert-danger mt-3 mb-0 rounded-3" role="alert">
+          <%= errorMsg %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (query) { %>
+  <h2 class="fs-4 fw-bold mb-4">Resultados para "<%= query %>"</h2>
+  
+  <% if (results.length === 0) { %>
+    <div class="text-center py-5 text-secondary">
+      <div class="fs-1 mb-2">🤷‍♂️</div>
+      <p>No encontramos series con ese nombre. Intentá de nuevo.</p>
+    </div>
+  <% } else { %>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+      <% results.forEach(show => { %>
+        <div class="col">
+          <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
+            <!-- Poster -->
+            <div class="poster-container" style="aspect-ratio: 2/3;">
+              <img src="<%= show.image_url || show.image || show.thumbnail || '/img/placeholder.svg' %>" class="w-100 h-100 object-fit-cover poster-image" alt="<%= show.name %>" onerror="this.src='/img/placeholder.svg';">
+            </div>
+            
+            <!-- Contenido -->
+            <div class="card-body p-3 d-flex flex-column flex-grow-1">
+              <h3 class="card-title fs-5 fw-bold text-truncate mb-1"><%= show.name %></h3>
+              <p class="card-text text-secondary small text-truncate-3 flex-grow-1 mb-3">
+                <%= show.overview || 'Sin descripción disponible.' %>
+              </p>
+              
+              <div class="mt-auto">
+                <% if (show.isFollowed) { %>
+                  <div class="d-flex gap-2">
+                    <span class="btn btn-secondary btn-sm rounded-pill w-100 disabled">✔️ Siguiendo</span>
+                    <a href="/series/<%= show.tvdbId %>" class="btn btn-outline-primary btn-sm rounded-pill px-3">Ver</a>
+                  </div>
+                <% } else { %>
+                  <form action="/series/seguir" method="POST" onsubmit="showLoading(this)">
+                    <input type="hidden" name="tvdbId" value="<%= show.tvdbId %>">
+                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100 submit-btn">
+                      ➕ Agregar a Seguimiento
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+<% } %>
+
+<script>
+  function showLoading(form) {
+    const btn = form.querySelector('.submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Descargando serie y episodios...`;
+  }
+</script>
+
+<%- include('partials/footer') %>

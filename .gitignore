@@ -1,0 +1,7 @@
+node_modules/
+.env
+public/img/*
+!public/img/.gitkeep
+GEMINI.md
+*.db
+*.db-journal
