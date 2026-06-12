@@ -233,7 +233,7 @@ router.post('/seguir', async (req, res) => {
       // Descargar y guardar posters
       const posters = series.artworks.filter(art => 
         art.type === 2 || String(art.type).toLowerCase() === 'poster'
-      ).slice(0, 15);
+      );
 
       for (let i = 0; i < posters.length; i++) {
         const art = posters[i];
@@ -250,7 +250,7 @@ router.post('/seguir', async (req, res) => {
         art.type === 3 || 
         String(art.type).toLowerCase() === 'background' || 
         String(art.type).toLowerCase() === 'fanart'
-      ).slice(0, 15);
+      );
 
       for (let i = 0; i < backgrounds.length; i++) {
         const art = backgrounds[i];
