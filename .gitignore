@@ -5,3 +5,4 @@ public/img/*
 GEMINI.md
 *.db
 *.db-journal
+.dev/
