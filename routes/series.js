@@ -348,8 +348,8 @@ router.post('/seguir', async (req, res) => {
     // TheTVDB v4 devuelve los episodios en un listado
     const insertMany = db.transaction((eps) => {
       for (const ep of eps) {
-        // Asegurar que guardamos los números correctos
-        if (ep.seasonNumber === undefined || ep.number === undefined) continue;
+        // Asegurar que guardamos los números correctos y omitimos especiales (temporada 0)
+        if (ep.seasonNumber === undefined || ep.number === undefined || ep.seasonNumber === 0) continue;
 
         insertEpisode.run(
           ep.id,
@@ -555,7 +555,7 @@ router.post('/:id/actualizar', async (req, res) => {
 
     const insertMany = db.transaction((eps) => {
       for (const ep of eps) {
-        if (ep.seasonNumber === undefined || ep.number === undefined) continue;
+        if (ep.seasonNumber === undefined || ep.number === undefined || ep.seasonNumber === 0) continue;
         insertEpisode.run(
           ep.id,
           id,

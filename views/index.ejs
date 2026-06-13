@@ -1,28 +1,28 @@
 <%- include('partials/header') %>
 
 <!-- Resumen y Progreso General -->
-<div class="row mb-5">
+<div class="row mb-3">
   <div class="col-12">
-    <div class="card glass-card p-4 shadow rounded-4 text-center text-md-start">
+    <div class="card glass-card p-3 shadow rounded-4 text-center text-md-start">
       <div class="row align-items-center">
-        <div class="col-md-8 mb-3 mb-md-0">
-          <h1 class="fw-black mb-2 text-gradient">📺 Mi Biblioteca</h1>
-          <p class="mb-0">Haciendo seguimiento de <strong><%= stats.totalShows %></strong> series y <strong><%= stats.totalWatched %></strong> / <strong><%= stats.totalEpisodes %></strong> episodios vistos.</p>
+        <div class="col-md-8 mb-2 mb-md-0">
+          <h1 class="fw-black fs-3 mb-1 text-gradient">📺 Mi Biblioteca</h1>
+          <p class="mb-0 small">Haciendo seguimiento de <strong><%= stats.totalShows %></strong> series y <strong><%= stats.totalWatched %></strong> / <strong><%= stats.totalEpisodes %></strong> vistos.</p>
         </div>
         <div class="col-md-4 text-md-end">
-          <a href="/series/buscar" class="btn btn-primary btn-lg rounded-pill px-4 shadow">
+          <a href="/series/buscar" class="btn btn-primary btn-sm rounded-pill px-3 shadow">
             Buscar Nueva Serie
           </a>
         </div>
       </div>
       
       <% if (stats.totalEpisodes > 0) { %>
-        <div class="mt-4">
-          <div class="d-flex justify-content-between mb-1 small fw-semibold">
+        <div class="mt-3">
+          <div class="d-flex justify-content-between mb-1 small fw-semibold" style="font-size: 0.8rem;">
             <span>Progreso General de Visualización</span>
             <span><%= stats.overallProgress %>%</span>
           </div>
-          <div class="progress rounded-pill" style="height: 12px;">
+          <div class="progress rounded-pill" style="height: 8px;">
             <div class="progress-bar progress-bar-striped progress-bar-animated bg-success rounded-pill" role="progressbar" style="width: <%= stats.overallProgress %>%" aria-valuenow="<%= stats.overallProgress %>" aria-valuemin="0" aria-valuemax="100"></div>
           </div>
         </div>
@@ -46,13 +46,25 @@
         <input type="radio" class="btn-check" name="viewMode" id="viewModeList" autocomplete="off">
         <label class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 border-0" for="viewModeList" style="font-size: 0.75rem; cursor: pointer;">📝 Lista</label>
       </div>
+
+      <!-- Botones de Ordenamiento -->
+      <div class="btn-group btn-group-sm rounded-pill overflow-hidden border border-secondary border-opacity-25 bg-dark bg-opacity-30 p-0.5" role="group" id="sort-mode-group">
+        <button type="button" id="sortAlphaBtn" class="btn btn-primary btn-sm rounded-pill px-3 py-1 border-0" style="font-size: 0.75rem;" title="Ordenar alfabéticamente">🔤 A-Z</button>
+        <button type="button" id="sortScoreBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 border-0 text-white" style="font-size: 0.75rem;" title="Ordenar por calificación descendente">⭐ Calific.</button>
+      </div>
     <% } %>
   </div>
   <% if (shows.length > 0) { %>
-    <button id="toggle-completed-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
-      <span id="toggle-completed-icon">👁️</span>
-      <span id="toggle-completed-text">Ocultar completadas</span>
-    </button>
+    <div class="d-flex gap-2">
+      <button id="toggle-ended-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
+        <span id="toggle-ended-icon">🎬</span>
+        <span id="toggle-ended-text">Ocultar terminadas</span>
+      </button>
+      <button id="toggle-completed-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
+        <span id="toggle-completed-icon">👁️</span>
+        <span id="toggle-completed-text">Ocultar completadas</span>
+      </button>
+    </div>
   <% } %>
 </div>
 
@@ -70,7 +82,7 @@
   <div id="view-grid-container" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
     <% shows.forEach(show => { %>
       <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
-      <div class="col" data-completed="<%= percentage === 100 %>">
+      <div class="col" data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>">
         <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
           <!-- Poster (Clickable al detalle) -->
           <a href="/series/<%= show.id %>" class="d-block text-decoration-none">
@@ -156,10 +168,10 @@
               <th scope="col" class="text-end" style="width: 150px;">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="view-list-tbody">
             <% shows.forEach(show => { %>
               <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
-              <tr data-completed="<%= percentage === 100 %>" class="border-bottom border-secondary border-opacity-10 py-2">
+              <tr data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>" class="border-bottom border-secondary border-opacity-10 py-2">
                 <!-- Póster -->
                 <td>
                   <a href="/series/<%= show.id %>">
@@ -271,23 +283,96 @@
       });
     }
 
-    if (toggleBtn) {
+    // Lógica para ordenar los elementos (Alfabéticamente / Calificación)
+    const sortAlphaBtn = document.getElementById('sortAlphaBtn');
+    const sortScoreBtn = document.getElementById('sortScoreBtn');
+    
+    function sortElements(criteria) {
+      if (!sortAlphaBtn || !sortScoreBtn) return;
+
+      // Ordenar Grid (Tarjetas)
+      if (gridContainer) {
+        const cards = Array.from(gridContainer.children);
+        cards.sort((a, b) => {
+          if (criteria === 'alpha') {
+            return a.dataset.name.localeCompare(b.dataset.name);
+          } else {
+            return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
+          }
+        });
+        cards.forEach(card => gridContainer.appendChild(card));
+      }
+      
+      // Ordenar Lista (Tabla)
+      const listTbody = document.getElementById('view-list-tbody');
+      if (listTbody) {
+        const rows = Array.from(listTbody.children);
+        rows.sort((a, b) => {
+          if (criteria === 'alpha') {
+            return a.dataset.name.localeCompare(b.dataset.name);
+          } else {
+            return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
+          }
+        });
+        rows.forEach(row => listTbody.appendChild(row));
+      }
+      
+      // Cambiar clases de los botones para reflejar el estado activo
+      if (criteria === 'alpha') {
+        sortAlphaBtn.classList.add('btn-primary');
+        sortAlphaBtn.classList.remove('btn-outline-secondary', 'text-white');
+        sortScoreBtn.classList.add('btn-outline-secondary', 'text-white');
+        sortScoreBtn.classList.remove('btn-primary');
+        localStorage.setItem('showtracker_sort_by', 'alpha');
+      } else {
+        sortScoreBtn.classList.add('btn-primary');
+        sortScoreBtn.classList.remove('btn-outline-secondary', 'text-white');
+        sortAlphaBtn.classList.add('btn-outline-secondary', 'text-white');
+        sortAlphaBtn.classList.remove('btn-primary');
+        localStorage.setItem('showtracker_sort_by', 'score');
+      }
+    }
+    
+    if (sortAlphaBtn && sortScoreBtn) {
+      // Cargar preferencia de ordenamiento
+      const savedSort = localStorage.getItem('showtracker_sort_by') || 'alpha';
+      sortElements(savedSort);
+      
+      sortAlphaBtn.addEventListener('click', () => sortElements('alpha'));
+      sortScoreBtn.addEventListener('click', () => sortElements('score'));
+    }
+
+    const toggleEndedBtn = document.getElementById('toggle-ended-btn');
+    if (toggleBtn && toggleEndedBtn) {
       const btnText = document.getElementById('toggle-completed-text');
       const btnIcon = document.getElementById('toggle-completed-icon');
+      const endedBtnText = document.getElementById('toggle-ended-text');
+      const endedBtnIcon = document.getElementById('toggle-ended-icon');
       
-      // Cargar preferencia guardada en localStorage
+      // Cargar preferencias guardadas en localStorage
       let hideCompleted = localStorage.getItem('hideCompletedSeries') === 'true';
+      let hideEnded = localStorage.getItem('hideEndedSeries') === 'true';
 
-      function applyFilter() {
-        const completedElements = document.querySelectorAll('[data-completed="true"]');
-        completedElements.forEach(el => {
-          if (hideCompleted) {
+      function applyFilters() {
+        const allCards = document.querySelectorAll('#view-grid-container > .col');
+        const allRows = document.querySelectorAll('#view-list-tbody > tr');
+        
+        const filterItem = (el) => {
+          const isCompleted = el.dataset.completed === 'true';
+          const isEnded = el.dataset.status === 'ended';
+          const shouldHide = (hideCompleted && isCompleted) || (hideEnded && isEnded);
+          
+          if (shouldHide) {
             el.classList.add('d-none');
           } else {
             el.classList.remove('d-none');
           }
-        });
+        };
 
+        allCards.forEach(filterItem);
+        allRows.forEach(filterItem);
+
+        // Actualizar botón de completadas
         if (hideCompleted) {
           btnText.innerText = 'Mostrar completadas';
           btnIcon.innerText = '👁️‍🗨️';
@@ -299,15 +384,34 @@
           toggleBtn.classList.add('btn-outline-secondary');
           toggleBtn.classList.remove('btn-success');
         }
+
+        // Actualizar botón de terminadas
+        if (hideEnded) {
+          endedBtnText.innerText = 'Mostrar terminadas';
+          endedBtnIcon.innerText = '🎬';
+          toggleEndedBtn.classList.remove('btn-outline-secondary');
+          toggleEndedBtn.classList.add('btn-danger');
+        } else {
+          endedBtnText.innerText = 'Ocultar terminadas';
+          endedBtnIcon.innerText = '🎬';
+          toggleEndedBtn.classList.add('btn-outline-secondary');
+          toggleEndedBtn.classList.remove('btn-danger');
+        }
       }
 
-      // Aplicar filtro inicial
-      applyFilter();
+      // Aplicar filtros iniciales
+      applyFilters();
 
       toggleBtn.addEventListener('click', () => {
         hideCompleted = !hideCompleted;
         localStorage.setItem('hideCompletedSeries', hideCompleted);
-        applyFilter();
+        applyFilters();
+      });
+
+      toggleEndedBtn.addEventListener('click', () => {
+        hideEnded = !hideEnded;
+        localStorage.setItem('hideEndedSeries', hideEnded);
+        applyFilters();
       });
     }
   });
