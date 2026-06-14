@@ -78,6 +78,31 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 
 ---
 
+## 🐳 Dockerización (Docker & Docker Compose)
+
+La aplicación cuenta con soporte completo para Docker y Docker Compose, permitiendo levantar todo el entorno de forma automatizada y aislada.
+
+### Requisitos previos
+*   Tener instalado [Docker](https://www.docker.com/) y [Docker Compose](https://docs.docker.com/compose/).
+
+### Pasos para iniciar el servicio
+1.  **Configurar las variables de entorno:**
+    Asegurate de tener el archivo `.env` configurado en la raíz del proyecto.
+2.  *(Opcional)* **Certificados SSL:**
+    Si querés correr la aplicación sobre **HTTPS**, creá una carpeta llamada `ssl` en la raíz del proyecto y colocá allí tu clave privada y certificado (ej. `apache.key` y `apache.crt` o `key.pem` y `cert.pem`). El contenedor los detectará y configurará HTTPS automáticamente.
+3.  **Levantar el contenedor:**
+    Ejecutá el siguiente comando en la raíz del proyecto:
+    ```bash
+    docker compose up -d --build
+    ```
+
+### Estructura de volúmenes persistentes
+El archivo `compose.yml` define dos volúmenes nombrados para evitar la pérdida de datos:
+*   `showtracker_db`: Mapeado a `/app/db` para persistir de forma segura la base de datos SQLite.
+*   `showtracker_img`: Mapeado a `/app/public/img` para guardar de forma externa todas las imágenes de posters, actores y fondos de pantalla descargados dinámicamente.
+
+---
+
 ## 📂 Estructura del Proyecto
 
 ```text

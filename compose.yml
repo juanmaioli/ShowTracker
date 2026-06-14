@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: showtracker
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    volumes:
+      - showtracker_db:/app/db
+      - showtracker_img:/app/public/img
+      - ./ssl:/app/ssl:ro
+
+volumes:
+  showtracker_db:
+  showtracker_img:

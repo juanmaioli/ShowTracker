@@ -1,0 +1,25 @@
+node_modules
+npm-debug.log
+db/showtracker.db
+db/showtracker.db-journal
+.env
+.git
+.gitignore
+.dev/
+.vscode/
+.gemini/
+brain/
+plan-*.md
+deduplicate*.js
+inspect-*.js
+check-*.js
+
+# Ignorar imágenes descargadas en public/img
+public/img/*
+!public/img/.gitkeep
+!public/img/placeholder.svg
+!public/img/cast-placeholder.svg
+
+# Certificados SSL
+ssl/
+
