@@ -48,6 +48,19 @@ router.get('/', (req, res) => {
       )
     `).get().count;
 
+    // Calcular cuántas series están abandonadas (terminadas y no vistas al 100%)
+    const abandonedShowsCount = db.prepare(`
+      SELECT COUNT(*) as count FROM (
+        SELECT s.id
+        FROM series s
+        JOIN episodes e ON s.id = e.series_id
+        WHERE LOWER(s.status) = 'ended'
+        GROUP BY s.id
+        HAVING SUM(CASE WHEN e.watched = 1 THEN 1 ELSE 0 END) < COUNT(e.id)
+           AND COUNT(e.id) > 0
+      )
+    `).get().count;
+
     // 3. Estadísticas Avanzadas para Gráficos
     // Emisión vs Terminada
     const statusStats = db.prepare(`
@@ -91,7 +104,8 @@ router.get('/', (req, res) => {
         totalEpisodes,
         watchedEpisodes,
         totalHoursWatched,
-        completedShowsCount
+        completedShowsCount,
+        abandonedShowsCount
       },
       advancedStats: {
         status: statusStats,

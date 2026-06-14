@@ -10,8 +10,8 @@
 </div>
 
 <!-- Tarjetas de Resumen General de Visualización -->
-<div class="row g-4 mb-5">
-  <div class="col-md-6 col-lg-3">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 mb-5">
+  <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">📺</div>
       <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Series Seguidas</h3>
@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <div class="col-md-6 col-lg-3">
+  <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">🎬</div>
       <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Episodios Vistos</h3>
@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <div class="col-md-6 col-lg-3">
+  <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">⏱️</div>
       <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Tiempo de Pantalla</h3>
@@ -39,11 +39,19 @@
     </div>
   </div>
 
-  <div class="col-md-6 col-lg-3">
+  <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">🏆</div>
       <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Series Completadas</h3>
       <p class="display-6 fw-bold mb-0 text-warning"><%= userStats.completedShowsCount %></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
+      <div class="fs-1 mb-2">🥀</div>
+      <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Series Abandonadas</h3>
+      <p class="display-6 fw-bold mb-0 text-danger"><%= userStats.abandonedShowsCount %></p>
     </div>
   </div>
 </div>

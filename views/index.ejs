@@ -56,6 +56,10 @@
   </div>
   <% if (shows.length > 0) { %>
     <div class="d-flex gap-2">
+      <button id="toggle-abandoned-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
+        <span id="toggle-abandoned-icon">🥀</span>
+        <span id="toggle-abandoned-text">Solo abandonadas</span>
+      </button>
       <button id="toggle-ended-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" style="transition: all 0.3s ease;">
         <span id="toggle-ended-icon">🎬</span>
         <span id="toggle-ended-text">Ocultar terminadas</span>
@@ -82,7 +86,7 @@
   <div id="view-grid-container" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
     <% shows.forEach(show => { %>
       <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
-      <div class="col" data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>">
+      <div class="col" data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>" data-abandoned="<%= percentage < 100 && show.status && show.status.toLowerCase() === 'ended' %>">
         <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
           <!-- Poster (Clickable al detalle) -->
           <a href="/series/<%= show.id %>" class="d-block text-decoration-none">
@@ -171,7 +175,7 @@
           <tbody id="view-list-tbody">
             <% shows.forEach(show => { %>
               <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
-              <tr data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>" class="border-bottom border-secondary border-opacity-10 py-2">
+              <tr data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>" data-abandoned="<%= percentage < 100 && show.status && show.status.toLowerCase() === 'ended' %>" class="border-bottom border-secondary border-opacity-10 py-2">
                 <!-- Póster -->
                 <td>
                   <a href="/series/<%= show.id %>">
@@ -343,15 +347,19 @@
     }
 
     const toggleEndedBtn = document.getElementById('toggle-ended-btn');
-    if (toggleBtn && toggleEndedBtn) {
+    const toggleAbandonedBtn = document.getElementById('toggle-abandoned-btn');
+    if (toggleBtn && toggleEndedBtn && toggleAbandonedBtn) {
       const btnText = document.getElementById('toggle-completed-text');
       const btnIcon = document.getElementById('toggle-completed-icon');
       const endedBtnText = document.getElementById('toggle-ended-text');
       const endedBtnIcon = document.getElementById('toggle-ended-icon');
+      const abandonedBtnText = document.getElementById('toggle-abandoned-text');
+      const abandonedBtnIcon = document.getElementById('toggle-abandoned-icon');
       
       // Cargar preferencias guardadas en localStorage
       let hideCompleted = localStorage.getItem('hideCompletedSeries') === 'true';
       let hideEnded = localStorage.getItem('hideEndedSeries') === 'true';
+      let showOnlyAbandoned = localStorage.getItem('showOnlyAbandonedSeries') === 'true';
 
       function applyFilters() {
         const allCards = document.querySelectorAll('#view-grid-container > .col');
@@ -360,7 +368,16 @@
         const filterItem = (el) => {
           const isCompleted = el.dataset.completed === 'true';
           const isEnded = el.dataset.status === 'ended';
-          const shouldHide = (hideCompleted && isCompleted) || (hideEnded && isEnded);
+          const isAbandoned = el.dataset.abandoned === 'true';
+          
+          let shouldHide = false;
+          if (showOnlyAbandoned) {
+            // Si está activo "Solo abandonadas", se oculta todo lo que no sea abandonado
+            shouldHide = !isAbandoned;
+          } else {
+            // Filtros normales
+            shouldHide = (hideCompleted && isCompleted) || (hideEnded && isEnded);
+          }
           
           if (shouldHide) {
             el.classList.add('d-none');
@@ -397,6 +414,26 @@
           toggleEndedBtn.classList.add('btn-outline-secondary');
           toggleEndedBtn.classList.remove('btn-danger');
         }
+
+        // Actualizar botón de abandonadas (Filtro exclusivo de "Solo abandonadas")
+        if (showOnlyAbandoned) {
+          abandonedBtnText.innerText = 'Mostrar todas';
+          abandonedBtnIcon.innerText = '📂';
+          toggleAbandonedBtn.classList.remove('btn-outline-secondary');
+          toggleAbandonedBtn.classList.add('btn-warning');
+          
+          // Desactivar los otros botones ya que el modo exclusivo tiene prioridad
+          toggleBtn.disabled = true;
+          toggleEndedBtn.disabled = true;
+        } else {
+          abandonedBtnText.innerText = 'Solo abandonadas';
+          abandonedBtnIcon.innerText = '🥀';
+          toggleAbandonedBtn.classList.add('btn-outline-secondary');
+          toggleAbandonedBtn.classList.remove('btn-warning');
+          
+          toggleBtn.disabled = false;
+          toggleEndedBtn.disabled = false;
+        }
       }
 
       // Aplicar filtros iniciales
@@ -411,6 +448,12 @@
       toggleEndedBtn.addEventListener('click', () => {
         hideEnded = !hideEnded;
         localStorage.setItem('hideEndedSeries', hideEnded);
+        applyFilters();
+      });
+
+      toggleAbandonedBtn.addEventListener('click', () => {
+        showOnlyAbandoned = !showOnlyAbandoned;
+        localStorage.setItem('showOnlyAbandonedSeries', showOnlyAbandoned);
         applyFilters();
       });
     }
