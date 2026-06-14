@@ -16,6 +16,13 @@
   <!-- Favicon Emoji -->
   <link class="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📺</text></svg>">
   <style>
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      padding: 30px 0;
+      border-bottom: 1px solid #34495e;
+    }
+
     /* Variables dinámicas para el tema */
     [data-bs-theme="dark"] {
       --bg-gradient: linear-gradient(135deg, #0f1015 0%, #151821 100%);
@@ -70,42 +77,50 @@
     .cursor-pointer {
       cursor: pointer;
     }
+    .nav-link{
+      color: #fff;
+    }
   </style>
   <!-- Lógica Cliente de Tema -->
   <script src="/js/theme.js" defer></script>
 </head>
 <body class="min-vh-100 d-flex flex-column">
-  
-  <nav class="navbar navbar-expand-lg border-bottom border-secondary border-opacity-25 mb-4 py-3 bg-black bg-opacity-25">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-gradient" href="/">
-        <span class="fs-4">📺</span> ShowTracker
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto gap-2 align-items-center mb-3 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link <%= activePage === 'home' ? 'active text-primary fw-semibold' : '' %>" href="/">Inicio</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link <%= activePage === 'search' ? 'active text-primary fw-semibold' : '' %>" href="/series/buscar">Buscar</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link <%= activePage === 'stats' ? 'active text-primary fw-semibold' : '' %>" href="/stats">Estadísticas</a>
-          </li>
-        </ul>
-        <div class="ms-lg-3 d-flex justify-content-center">
-          <!-- Selector de Tema con Emojis -->
-          <div class="form-check form-switch d-flex align-items-center gap-2 border border-secondary-subtle px-3 py-2 rounded-pill bg-body-tertiary shadow-sm m-0 cursor-pointer" title="Cambiar tema claro/oscuro" style="cursor: pointer;">
-            <span class="fs-7 select-none" aria-hidden="true" style="user-select: none;">☀️</span>
-            <input class="form-check-input ms-0 me-0" type="checkbox" id="theme-switch" role="switch" aria-label="Cambiar tema de la aplicación (claro u oscuro)" checked style="cursor: pointer;">
-            <span class="fs-7 select-none" aria-hidden="true" style="user-select: none;">🌙</span>
+ <!-- Header Hero -->
+  <div class="hero-section text-center text-white shadow">
+    <div class="container position-relative">
+      <h1 class="display-3 fw-bold mb-1">
+        📺 ShowTracker
+      </h1>
+
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto gap-2 align-items-center mb-3 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link <%= activePage === 'home' ? 'active text-primary fw-semibold' : '' %>" href="/">Inicio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link <%= activePage === 'search' ? 'active text-primary fw-semibold' : '' %>" href="/series/buscar">Buscar</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link <%= activePage === 'stats' ? 'active text-primary fw-semibold' : '' %>" href="/stats">Estadísticas</a>
+              </li>
+            </ul>
+            <div class="ms-lg-3 d-flex justify-content-center">
+              <!-- Selector de Tema con Emojis -->
+              <div class="form-check form-switch d-flex align-items-center gap-2 border border-secondary-subtle rounded-pill shadow-sm m-0 cursor-pointer" title="Cambiar tema claro/oscuro" style="cursor: pointer;">
+                <span class="fs-7 select-none" aria-hidden="true" style="user-select: none;">☀️</span>
+                <input class="form-check-input ms-0 me-0" type="checkbox" id="theme-switch" role="switch" aria-label="Cambiar tema de la aplicación (claro u oscuro)" checked style="cursor: pointer;">
+                <span class="fs-7 select-none" aria-hidden="true" style="user-select: none;">🌙</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </nav>
+      </nav>     
 
-  <main class="container flex-grow-1 pb-5">
+    </div>
+  </div>  
+  <main class="container flex-grow-1 pb-5 mt-3">

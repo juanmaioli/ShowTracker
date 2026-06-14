@@ -14,7 +14,7 @@
   <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">📺</div>
-      <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Series Seguidas</h3>
+      <h3 class="fs-6 uppercase fw-semibold mb-1">Series Seguidas</h3>
       <p class="display-6 fw-bold mb-0 text-primary"><%= userStats.totalShows %></p>
     </div>
   </div>
@@ -22,9 +22,9 @@
   <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">🎬</div>
-      <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Episodios Vistos</h3>
+      <h3 class="fs-6 uppercase fw-semibold mb-1">Episodios Vistos</h3>
       <p class="display-6 fw-bold mb-0 text-success">
-        <%= userStats.watchedEpisodes %> <span class="fs-6 text-white-50">/ <%= userStats.totalEpisodes %></span>
+        <%= userStats.watchedEpisodes %> <span class="fs-6">/ <%= userStats.totalEpisodes %></span>
       </p>
     </div>
   </div>
@@ -32,9 +32,9 @@
   <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">⏱️</div>
-      <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Tiempo de Pantalla</h3>
+      <h3 class="fs-6 uppercase fw-semibold mb-1">Tiempo de Pantalla</h3>
       <p class="display-6 fw-bold mb-0 text-info">
-        <%= userStats.totalHoursWatched %> <span class="fs-6 text-white-50">horas</span>
+        <%= userStats.totalHoursWatched %> <span class="fs-6">horas</span>
       </p>
     </div>
   </div>
@@ -42,7 +42,7 @@
   <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">🏆</div>
-      <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Series Completadas</h3>
+      <h3 class="fs-6 uppercase fw-semibold mb-1">Series Completadas</h3>
       <p class="display-6 fw-bold mb-0 text-warning"><%= userStats.completedShowsCount %></p>
     </div>
   </div>
@@ -50,7 +50,7 @@
   <div class="col">
     <div class="card glass-card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
       <div class="fs-1 mb-2">🥀</div>
-      <h3 class="fs-6 uppercase fw-semibold mb-1 text-white-50">Series Abandonadas</h3>
+      <h3 class="fs-6 uppercase fw-semibold mb-1">Series Abandonadas</h3>
       <p class="display-6 fw-bold mb-0 text-danger"><%= userStats.abandonedShowsCount %></p>
     </div>
   </div>
@@ -66,13 +66,13 @@
       
       <% if (userStats.totalShows === 0) { %>
         <div class="text-center py-5">
-          <p class="text-white-50">Comenzá a seguir algunas series para generar gráficos analíticos.</p>
+          <p class="">Comenzá a seguir algunas series para generar gráficos analíticos.</p>
         </div>
       <% } else { %>
         <div class="row g-4">
           <!-- Gráfico 1: Estado de las series -->
           <div class="col-md-6 text-center">
-            <h4 class="fs-6 fw-bold mb-3 text-white-50">Estado de las Series</h4>
+            <h4 class="fs-6 fw-bold mb-3 ">Estado de las Series</h4>
             <div style="position: relative; height: 200px; width: 100%;">
               <canvas id="statusChart"></canvas>
             </div>
@@ -80,7 +80,7 @@
           
           <!-- Gráfico 2: Calificaciones de Temporadas -->
           <div class="col-md-6 text-center">
-            <h4 class="fs-6 fw-bold mb-3 text-white-50">Distribución de Calificaciones</h4>
+            <h4 class="fs-6 fw-bold mb-3 ">Distribución de Calificaciones</h4>
             <div style="position: relative; height: 200px; width: 100%;">
               <canvas id="ratingsChart"></canvas>
             </div>
@@ -97,7 +97,7 @@
         <h2 class="fs-4 fw-bold mb-3 d-flex align-items-center gap-2 text-white">
           <span>💾</span> Copias de Seguridad
         </h2>
-        <p class="small text-white-50">Descargá o restaurá tu biblioteca completa. Esto incluye todas tus series seguidas, las calificaciones de las temporadas y el historial de episodios vistos.</p>
+        <p class="small ">Descargá o restaurá tu biblioteca completa. Esto incluye todas tus series seguidas, las calificaciones de las temporadas y el historial de episodios vistos.</p>
         
         <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning rounded-3 small p-2 mb-4">
           ⚠️ <strong>Nota:</strong> Al importar una copia de seguridad se combinarán los datos existentes con los del archivo.
@@ -131,7 +131,7 @@
       <!-- Progreso Anual contra el Límite -->
       <div class="mb-4">
         <div class="d-flex justify-content-between mb-2 small fw-semibold">
-          <span class="text-white-50">Uso del Límite Anual (50.000 consultas)</span>
+          <span class="">Uso del Límite Anual (50.000 consultas)</span>
           <span class="text-info"><%= apiStats.year %> / <%= apiStats.limit %> (<%= apiStats.percentageUsed %>%)</span>
         </div>
         <div class="progress rounded-pill" style="height: 14px;">
@@ -147,19 +147,19 @@
       <div class="row g-3 text-center">
         <div class="col-6 col-md-4">
           <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
-            <span class="small d-block text-white-50">Consultas Hoy</span>
+            <span class="small d-block ">Consultas Hoy</span>
             <strong class="fs-4 text-white"><%= apiStats.today %></strong>
           </div>
         </div>
         <div class="col-6 col-md-4">
           <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
-            <span class="small d-block text-white-50">Consultas este Mes</span>
+            <span class="small d-block ">Consultas este Mes</span>
             <strong class="fs-4 text-white"><%= apiStats.month %></strong>
           </div>
         </div>
         <div class="col-12 col-md-4">
           <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
-            <span class="small d-block text-white-50">Consultas este Año</span>
+            <span class="small d-block ">Consultas este Año</span>
             <strong class="fs-4 text-white"><%= apiStats.year %></strong>
           </div>
         </div>
@@ -171,9 +171,9 @@
   <div class="col-lg-4">
     <div class="card glass-card p-4 rounded-4 shadow border-0 h-100">
       <h3 class="fs-5 fw-bold mb-3 text-warning">⚠️ Acerca del Límite</h3>
-      <p class="small text-white-50">Tu clave de API de TheTVDB v4 cuenta con un límite estricto de **50.000 solicitudes al año**.</p>
-      <p class="small text-white-50">Para optimizar tu consumo y evitar cargos, ShowTracker aplica las siguientes técnicas:</p>
-      <ul class="small ps-3 text-white-50">
+      <p class="small ">Tu clave de API de TheTVDB v4 cuenta con un límite estricto de **50.000 solicitudes al año**.</p>
+      <p class="small ">Para optimizar tu consumo y evitar cargos, ShowTracker aplica las siguientes técnicas:</p>
+      <ul class="small ps-3 ">
         <li>Guarda localmente la metadata de las series y episodios una vez consultados.</li>
         <li>Descarga las imágenes a la carpeta local para no hacer peticiones repetidas.</li>
         <li>Actualiza la información solo cuando lo decidas de forma manual.</li>
@@ -191,13 +191,13 @@
   <div class="table-responsive">
     <table class="table table-dark table-hover mb-0 align-middle">
       <thead>
-        <tr class="table-black text-white-50" style="font-size: 0.85rem;">
+        <tr class="table-black " style="font-size: 0.85rem;">
           <th scope="col" class="ps-4">Fecha</th>
           <th scope="col">Endpoint / Acción</th>
           <th scope="col" class="text-end pe-4">Cantidad de Llamadas</th>
         </tr>
       </thead>
-      <tbody class="text-white-50">
+      <tbody class="">
         <% if (apiLogs.length === 0) { %>
           <tr>
             <td colspan="3" class="text-center py-4">Aún no se registraron llamadas a la API.</td>
