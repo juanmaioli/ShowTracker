@@ -60,7 +60,7 @@
   <!-- Gráficos de Estadísticas Avanzadas -->
   <div class="col-lg-8">
     <div class="card glass-card p-4 rounded-4 shadow border-0 h-100">
-      <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2 text-white">
+      <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
         <span>📈</span> Análisis de Visualización
       </h2>
       
@@ -94,7 +94,7 @@
   <div class="col-lg-4">
     <div class="card glass-card p-4 rounded-4 shadow border-0 h-100 d-flex flex-column justify-content-between">
       <div>
-        <h2 class="fs-4 fw-bold mb-3 d-flex align-items-center gap-2 text-white">
+        <h2 class="fs-4 fw-bold mb-3 d-flex align-items-center gap-2">
           <span>💾</span> Copias de Seguridad
         </h2>
         <p class="small ">Descargá o restaurá tu biblioteca completa. Esto incluye todas tus series seguidas, las calificaciones de las temporadas y el historial de episodios vistos.</p>
@@ -124,7 +124,7 @@
 <div class="row g-4 mb-5">
   <div class="col-lg-8">
     <div class="card glass-card p-4 rounded-4 shadow border-0">
-      <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2 text-white">
+      <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
         <span>🌐</span> Consumo de API TheTVDB v4
       </h2>
       
@@ -148,19 +148,19 @@
         <div class="col-6 col-md-4">
           <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
             <span class="small d-block ">Consultas Hoy</span>
-            <strong class="fs-4 text-white"><%= apiStats.today %></strong>
+            <strong class="fs-4"><%= apiStats.today %></strong>
           </div>
         </div>
         <div class="col-6 col-md-4">
           <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
             <span class="small d-block ">Consultas este Mes</span>
-            <strong class="fs-4 text-white"><%= apiStats.month %></strong>
+            <strong class="fs-4"><%= apiStats.month %></strong>
           </div>
         </div>
         <div class="col-12 col-md-4">
           <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-secondary border-opacity-10">
             <span class="small d-block ">Consultas este Año</span>
-            <strong class="fs-4 text-white"><%= apiStats.year %></strong>
+            <strong class="fs-4"><%= apiStats.year %></strong>
           </div>
         </div>
       </div>
@@ -183,13 +183,13 @@
 </div>
 
 <!-- Tabla de Registros Recientes -->
-<h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2 text-white">
+<h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
   <span>📜</span> Historial Reciente de Consultas
 </h2>
 
 <div class="card glass-card rounded-4 border-0 overflow-hidden shadow mb-5">
   <div class="table-responsive">
-    <table class="table table-dark table-hover mb-0 align-middle">
+    <table class="table table-hover mb-0 align-middle" style="color: inherit;">
       <thead>
         <tr class="table-black " style="font-size: 0.85rem;">
           <th scope="col" class="ps-4">Fecha</th>
@@ -234,71 +234,110 @@
       
       const ratingsData = <%= JSON.stringify(advancedStats.ratingsDistribution) %>;
 
-      // 1. Gráfico de Estados de Series (Dona)
-      const ctxStatus = document.getElementById('statusChart').getContext('2d');
-      new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-          labels: ['En emisión', 'Terminadas', 'Otros'],
-          datasets: [{
-            data: [statusData.continuing, statusData.ended, statusData.other],
-            backgroundColor: ['#198754', '#dc3545', '#6c757d'],
-            borderColor: '#212529',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                color: '#fff',
-                font: { size: 10 }
-              }
-            }
-          }
-        }
-      });
+      let statusChartInstance;
+      let ratingsChartInstance;
 
-      // 2. Gráfico de Calificaciones (Barras)
-      const ctxRatings = document.getElementById('ratingsChart').getContext('2d');
-      new Chart(ctxRatings, {
-        type: 'bar',
-        data: {
-          labels: ['1★', '2★', '3★', '4★', '5★'],
-          datasets: [{
-            label: 'Temporadas',
-            data: ratingsData,
-            backgroundColor: '#6f42c1',
-            borderColor: '#8f62d1',
-            borderWidth: 1,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
+      function initCharts() {
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const textColor = isDark ? '#fff' : '#334155';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const chartBorderColor = isDark ? '#212529' : '#ffffff';
+
+        // 1. Gráfico de Estados de Series (Dona)
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        statusChartInstance = new Chart(ctxStatus, {
+          type: 'doughnut',
+          data: {
+            labels: ['En emisión', 'Terminadas', 'Otros'],
+            datasets: [{
+              data: [statusData.continuing, statusData.ended, statusData.other],
+              backgroundColor: ['#198754', '#dc3545', '#6c757d'],
+              borderColor: chartBorderColor,
+              borderWidth: 1
+            }]
           },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: '#fff', font: { size: 10 } }
-            },
-            y: {
-              grid: { color: 'rgba(255, 255, 255, 0.1)' },
-              ticks: { 
-                color: '#fff',
-                font: { size: 10 },
-                stepSize: 1
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: textColor,
+                  font: { size: 10 }
+                }
               }
             }
           }
+        });
+
+        // 2. Gráfico de Calificaciones (Barras)
+        const ctxRatings = document.getElementById('ratingsChart').getContext('2d');
+        ratingsChartInstance = new Chart(ctxRatings, {
+          type: 'bar',
+          data: {
+            labels: ['1★', '2★', '3★', '4★', '5★'],
+            datasets: [{
+              label: 'Temporadas',
+              data: ratingsData,
+              backgroundColor: '#6f42c1',
+              borderColor: '#8f62d1',
+              borderWidth: 1,
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: textColor, font: { size: 10 } }
+              },
+              y: {
+                grid: { color: gridColor },
+                ticks: { 
+                  color: textColor,
+                  font: { size: 10 },
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+      }
+
+      function updateChartThemes() {
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const textColor = isDark ? '#fff' : '#334155';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const chartBorderColor = isDark ? '#212529' : '#ffffff';
+
+        if (statusChartInstance) {
+          statusChartInstance.options.plugins.legend.labels.color = textColor;
+          statusChartInstance.data.datasets[0].borderColor = chartBorderColor;
+          statusChartInstance.update();
         }
+
+        if (ratingsChartInstance) {
+          ratingsChartInstance.options.scales.x.ticks.color = textColor;
+          ratingsChartInstance.options.scales.y.ticks.color = textColor;
+          ratingsChartInstance.options.scales.y.grid.color = gridColor;
+          ratingsChartInstance.update();
+        }
+      }
+
+      // Inicializar gráficos
+      initCharts();
+
+      // Observador de cambios del tema
+      const observer = new MutationObserver(() => {
+        updateChartThemes();
       });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
     <% } %>
 
     // ----------------------------------------------------

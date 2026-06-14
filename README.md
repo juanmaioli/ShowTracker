@@ -36,7 +36,7 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 *   **Enlaces Directos a TheTVDB:** Los identificadores de serie en la vista de detalle ahora enlazan de forma directa a sus páginas correspondientes en TheTVDB, abriéndose en pestañas nuevas.
 *   **Integración con JustWatch Argentina:** Botón de acceso directo en la vista de detalles que permite buscar el título de la serie directamente en JustWatch en una pestaña nueva, ayudando al usuario a saber en qué plataformas está disponible el contenido.
 *   **Año de Estreno en Títulos y Temporadas:** Visualización del año del primer episodio de la serie junto a su título principal (en dashboard, detalle y búsquedas) y el año de inicio de cada temporada al lado de su número en el desglose de episodios, permitiendo contextualizar temporalmente el contenido.
-*   **Interfaz Premium Autoadaptativa:** Diseñada con **Bootstrap 5.3**, glassmorphism y soporte de cambio de tema claro y oscuro (☀️ / 🌙) con persistencia local (`localStorage`) y transiciones fluidas.
+*   **Interfaz Premium Autoadaptativa:** Diseñada con **Bootstrap 5.3**, glassmorphism y soporte de cambio de tema claro y oscuro (☀️ / 🌙) con persistencia local (`localStorage`) y transiciones fluidas. Cuenta con adaptabilidad dinámica en tiempo real para gráficos de **Chart.js** mediante un observador de mutaciones (`MutationObserver`), asegurando legibilidad total de ejes y leyendas en ambos modos.
 *   **Traducción Inteligente:** Priorización de idioma español (`spa`) para la metadata mediante rutas específicas de traducción con fallback automático a inglés (`eng`) en caso de no encontrarse traducción disponible.
 
 ---

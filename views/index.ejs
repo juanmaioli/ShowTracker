@@ -157,9 +157,9 @@
   <div id="view-list-container" class="d-none">
     <div class="card glass-card p-3 shadow rounded-4 border-0">
       <div class="table-responsive">
-        <table class="table table-dark table-hover table-borderless align-middle mb-0" style="--bs-table-bg: transparent;">
+        <table class="table table-hover table-borderless align-middle mb-0" style="--bs-table-bg: transparent; color: inherit;">
           <thead>
-            <tr class="text-white-50 border-bottom border-secondary border-opacity-25" style="font-size: 0.8rem;">
+            <tr class="opacity-75 border-bottom border-secondary border-opacity-25" style="font-size: 0.8rem;">
               <th scope="col" style="width: 60px;">Póster</th>
               <th scope="col">Nombre</th>
               <th scope="col" style="width: 100px;">Calificación</th>
@@ -182,7 +182,7 @@
                 <!-- Nombre y Año -->
                 <td>
                   <h4 class="fs-6 fw-bold mb-0">
-                    <a href="/series/<%= show.id %>" class="text-white text-decoration-none" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    <a href="/series/<%= show.id %>" class="text-reset text-decoration-none" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                       <%= show.name %><%= show.first_air_year ? ` (${show.first_air_year})` : '' %>
                     </a>
                   </h4>
@@ -216,7 +216,7 @@
                 <!-- Progreso -->
                 <td>
                   <div class="d-flex justify-content-between mb-1" style="font-size: 0.75rem;">
-                    <span class="text-white-50"><%= show.watched_episodes %> / <%= show.total_episodes %> epis.</span>
+                    <span class="text-secondary"><%= show.watched_episodes %> / <%= show.total_episodes %> epis.</span>
                     <span class="<%= percentage === 100 ? 'text-success' : 'text-primary' %> fw-bold"><%= percentage %>%</span>
                   </div>
                   <div class="progress" style="height: 5px;">
@@ -320,14 +320,14 @@
       // Cambiar clases de los botones para reflejar el estado activo
       if (criteria === 'alpha') {
         sortAlphaBtn.classList.add('btn-primary');
-        sortAlphaBtn.classList.remove('btn-outline-secondary', 'text-white');
-        sortScoreBtn.classList.add('btn-outline-secondary', 'text-white');
+        sortAlphaBtn.classList.remove('btn-outline-secondary');
+        sortScoreBtn.classList.add('btn-outline-secondary');
         sortScoreBtn.classList.remove('btn-primary');
         localStorage.setItem('showtracker_sort_by', 'alpha');
       } else {
         sortScoreBtn.classList.add('btn-primary');
-        sortScoreBtn.classList.remove('btn-outline-secondary', 'text-white');
-        sortAlphaBtn.classList.add('btn-outline-secondary', 'text-white');
+        sortScoreBtn.classList.remove('btn-outline-secondary');
+        sortAlphaBtn.classList.add('btn-outline-secondary');
         sortAlphaBtn.classList.remove('btn-primary');
         localStorage.setItem('showtracker_sort_by', 'score');
       }
