@@ -66,7 +66,11 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
     DATABASE_URL=db/showtracker.db
     TVDB_API_KEY=tu_api_key_aqui
     ```
+    > [!TIP]
+    > **Base de Datos de Ejemplo:** El repositorio incluye el archivo `showtracker-example.db` con series precargadas. Para usarla como demostración inmediata sin configurar una API Key de TheTVDB, simplemente copiala al directorio `db/` y renombrala a `showtracker.db`.
+
 4.  **Inicializar la Base de Datos:**
+    Si decidiste no utilizar la base de datos de ejemplo, ejecutá:
     ```bash
     node db/init.js
     ```

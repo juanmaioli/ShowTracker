@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" width="100%" height="100%">
+  <rect width="100%" height="100%" fill="#212529"/>
+  <rect x="10" y="10" width="280" height="430" rx="15" fill="#2c3034" stroke="#373b3e" stroke-width="2"/>
+  <g transform="translate(150, 190)" text-anchor="middle">
+    <!-- Icono TV -->
+    <path d="M-40,-30 L40,-30 C45,-30 49,-26 49,-21 L49,21 C49,26 45,30 40,30 L-40,30 C-45,30 -49,26 -49,21 L-49,-21 C-49,-26 -45,-30 -40,-30 Z" fill="none" stroke="#6c757d" stroke-width="4"/>
+    <path d="M-15,-30 L-30,-45" stroke="#6c757d" stroke-width="4" stroke-linecap="round"/>
+    <path d="M15,-30 L30,-45" stroke="#6c757d" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="35" cy="-15" r="3" fill="#6c757d"/>
+    <line x1="-35" y1="15" x2="35" y2="15" stroke="#6c757d" stroke-width="2"/>
+    <text y="70" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="bold" fill="#6c757d">Sin Imagen</text>
+    <text y="90" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#495057">ShowTracker</text>
+  </g>
+</svg>

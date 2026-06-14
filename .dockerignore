@@ -15,10 +15,10 @@ inspect-*.js
 check-*.js
 
 # Ignorar imágenes descargadas en public/img
-public/img/*
+public/img/posters/*
+public/img/backgrounds/*
+public/img/cast/*
 !public/img/.gitkeep
-!public/img/placeholder.svg
-!public/img/cast-placeholder.svg
 
 # Certificados SSL
 ssl/
