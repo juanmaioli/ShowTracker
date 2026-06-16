@@ -145,6 +145,13 @@ El archivo `compose.yml` define dos volúmenes nombrados para evitar la pérdida
 
 ---
 
+## 🎨 Variantes del Software (Música & Películas)
+
+Si estás interesado en adaptar este software para realizar el seguimiento de otros medios, consultá la guía detallada:
+*   [VARIANTES.md](file:///home/juan/Documentos/Dev/Apps/ShowTracker/VARIANTES.md): Contiene los esquemas de base de datos SQLite recomendados, integraciones de APIs (TMDB y Spotify/MusicBrainz) y adaptaciones de gráficos para música y películas.
+
+---
+
 ## 👤 Autor
 
 *   **Juan Gabriel Maioli**
