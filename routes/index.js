@@ -23,6 +23,9 @@ router.get('/', (req, res) => {
       ORDER BY s.name ASC
     `;
     const shows = db.prepare(query).all();
+    
+    // Ordenar alfabéticamente ignorando acentos pero respetando la Ñ
+    shows.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
 
     // Calcular estadísticas resumidas
     let totalEpisodes = 0;

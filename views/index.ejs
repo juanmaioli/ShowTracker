@@ -1,5 +1,72 @@
 <%- include('partials/header') %>
 
+<!-- Estilos para el Abecedario Flotante -->
+<style>
+  #alphabet-nav {
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+  #alphabet-nav::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+  .alphabet-link {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 50%;
+    color: inherit;
+    transition: all 0.15s ease;
+    border: none;
+    background: transparent;
+    padding: 0;
+    line-height: 1;
+  }
+  .alphabet-link:hover:not(.disabled) {
+    background-color: var(--bs-purple);
+    color: #fff !important;
+    transform: scale(1.15);
+  }
+  .alphabet-link.disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* Separador de cuadrícula: de alto igual a las tarjetas, pero la mitad de angosto */
+  .separator-col {
+    flex: 0 0 auto !important;
+    width: 25% !important; /* Mobile (mitad de 50%) */
+  }
+  @media (min-width: 576px) {
+    .separator-col {
+      width: 16.66667% !important; /* sm (mitad de 33.3%) */
+    }
+  }
+  @media (min-width: 768px) {
+    .separator-col {
+      width: 12.5% !important; /* md (mitad de 25%) */
+    }
+  }
+  @media (min-width: 992px) {
+    .separator-col {
+      width: 8.33333% !important; /* lg (mitad de 16.6%) */
+    }
+  }
+</style>
+
+<% if (shows.length > 0) { %>
+  <!-- Navegación Alfabética Lateral (Index) -->
+  <div id="alphabet-nav" class="d-none d-md-flex flex-column position-fixed end-0 top-50 translate-middle-y me-2 p-1.5 glass-card rounded-pill shadow" style="z-index: 1040; gap: 2px;">
+    <!-- Se genera dinámicamente con JS -->
+  </div>
+<% } %>
+
 <!-- Resumen y Progreso General -->
 <div class="row mb-3">
   <div class="col-12">
@@ -80,7 +147,27 @@
 <% } else { %>
   <!-- Contenedor Vista Tarjetas (Grid) -->
   <div id="view-grid-container" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+    <% let lastInitialGrid = ''; %>
     <% shows.forEach(show => { %>
+      <% 
+        let firstChar = show.name.charAt(0).toUpperCase();
+        let normalizedChar = firstChar;
+        if (firstChar !== 'Ñ') {
+          normalizedChar = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+        let currentInitial = /^[0-9\W]/.test(normalizedChar) ? '#' : normalizedChar;
+        if (currentInitial !== lastInitialGrid) { 
+          lastInitialGrid = currentInitial;
+      %>
+        <!-- Salto de línea para forzar inicio de fila -->
+        <div class="w-100 separator-break" data-letter="<%= currentInitial.toLowerCase() %>"></div>
+        <!-- Separador de Letra (Grid) -->
+        <div class="col separator-col" data-letter="<%= currentInitial.toLowerCase() %>">
+          <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex align-items-center justify-content-center bg-purple bg-opacity-10" style="border: 2px dashed var(--bs-purple) !important;">
+            <span class="display-3 fw-black text-gradient opacity-75"><%= currentInitial %></span>
+          </div>
+        </div>
+      <% } %>
       <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
       <div class="col" data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>" data-abandoned="<%= percentage < 100 && show.status && show.status.toLowerCase() === 'ended' %>">
         <div class="card h-100 glass-card shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
@@ -169,7 +256,25 @@
             </tr>
           </thead>
           <tbody id="view-list-tbody">
+            <% let lastInitialList = ''; %>
             <% shows.forEach(show => { %>
+              <% 
+                let firstChar = show.name.charAt(0).toUpperCase();
+                let normalizedChar = firstChar;
+                if (firstChar !== 'Ñ') {
+                  normalizedChar = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                }
+                let currentInitial = /^[0-9\W]/.test(normalizedChar) ? '#' : normalizedChar;
+                if (currentInitial !== lastInitialList) { 
+                  lastInitialList = currentInitial;
+              %>
+                <!-- Separador de Letra (Lista) -->
+                <tr class="separator-row" data-letter="<%= currentInitial.toLowerCase() %>">
+                  <td colspan="6" class="py-3 ps-3 border-bottom border-secondary border-opacity-25 bg-body-secondary bg-opacity-25">
+                    <span class="fs-5 fw-black text-gradient"><%= currentInitial %></span>
+                  </td>
+                </tr>
+              <% } %>
               <% const percentage = show.total_episodes > 0 ? Math.round((show.watched_episodes / show.total_episodes) * 100) : 0; %>
               <tr data-completed="<%= percentage === 100 %>" data-name="<%= show.name.toLowerCase() %>" data-score="<%= show.user_score %>" data-status="<%= (show.status || '').toLowerCase() %>" data-abandoned="<%= percentage < 100 && show.status && show.status.toLowerCase() === 'ended' %>" class="border-bottom border-secondary border-opacity-10 py-2">
                 <!-- Póster -->
@@ -312,8 +417,8 @@
       const searchInput = document.getElementById('search-shows-input');
 
       function applyFilters() {
-        const allCards = document.querySelectorAll('#view-grid-container > .col');
-        const allRows = document.querySelectorAll('#view-list-tbody > tr');
+        const allCards = document.querySelectorAll('#view-grid-container > .col:not(.separator-col)');
+        const allRows = document.querySelectorAll('#view-list-tbody > tr:not(.separator-row)');
         const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
         
         const filterItem = (el) => {
@@ -345,6 +450,58 @@
 
         allCards.forEach(filterItem);
         allRows.forEach(filterItem);
+
+        // Mostrar/ocultar separadores del Grid y sus saltos de línea según si hay tarjetas visibles
+        const gridSeparators = document.querySelectorAll('#view-grid-container > .separator-col');
+        gridSeparators.forEach(sep => {
+          const letter = sep.dataset.letter;
+          const breakDiv = document.querySelector(`#view-grid-container > .separator-break[data-letter="${letter}"]`);
+          
+          const hasVisible = Array.from(allCards).some(card => {
+            if (card.classList.contains('d-none')) return false;
+            const firstChar = card.dataset.name.charAt(0);
+            let normalizedChar = firstChar;
+            if (firstChar !== 'ñ') {
+              normalizedChar = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+            if (letter === '#') {
+              return /^[0-9\W]/.test(normalizedChar);
+            } else {
+              return normalizedChar === letter;
+            }
+          });
+          
+          if (hasVisible) {
+            sep.classList.remove('d-none');
+          } else {
+            sep.classList.add('d-none');
+            if (breakDiv) breakDiv.classList.add('d-none');
+          }
+        });
+
+        // Mostrar/ocultar separadores de la Lista según si hay filas visibles
+        const listSeparators = document.querySelectorAll('#view-list-tbody > .separator-row');
+        listSeparators.forEach(sep => {
+          const letter = sep.dataset.letter;
+          const hasVisible = Array.from(allRows).some(row => {
+            if (row.classList.contains('d-none')) return false;
+            const firstChar = row.dataset.name.charAt(0);
+            let normalizedChar = firstChar;
+            if (firstChar !== 'ñ') {
+              normalizedChar = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+            if (letter === '#') {
+              return /^[0-9\W]/.test(normalizedChar);
+            } else {
+              return normalizedChar === letter;
+            }
+          });
+          if (hasVisible) {
+            sep.classList.remove('d-none');
+          } else {
+            sep.classList.add('d-none');
+          }
+        });
 
         // Controlar si se muestran resultados o no
         let visibleCount = 0;
@@ -408,10 +565,164 @@
           toggleBtn.disabled = false;
           toggleEndedBtn.disabled = false;
         }
+
+        // Actualizar navegación alfabética lateral
+        if (typeof updateAlphabetNav === 'function') {
+          updateAlphabetNav();
+        }
+
+        // Ajustar saltos de línea de los separadores del Grid dinámicamente
+        if (typeof adjustGridSeparators === 'function') {
+          adjustGridSeparators();
+        }
+      }
+
+      function getColsPerRow() {
+        const width = window.innerWidth;
+        if (width >= 992) return 6; // lg
+        if (width >= 768) return 4; // md
+        if (width >= 576) return 3; // sm
+        return 2; // xs
+      }
+
+      function adjustGridSeparators() {
+        const container = document.getElementById('view-grid-container');
+        if (!container || container.classList.contains('d-none')) return;
+        
+        const children = Array.from(container.children).filter(el => {
+          return !el.classList.contains('separator-break') && !el.classList.contains('d-none');
+        });
+        
+        const colsPerRow = getColsPerRow();
+        
+        // Ocultar todos los saltos de línea por defecto
+        const breaks = container.querySelectorAll('.separator-break');
+        breaks.forEach(b => b.classList.add('d-none'));
+        
+        let currentPosInRow = 0;
+        
+        children.forEach(el => {
+          const isSeparator = el.classList.contains('separator-col');
+          
+          if (isSeparator) {
+            // Si el espacio restante antes del separador (0.5 de ancho) es menor que 1.5 columnas,
+            // entonces colocar el separador aquí haría que no quepa ningún show (1.0 de ancho) en la fila.
+            // Por lo tanto, el separador quedaría como último elemento de la fila. Forzamos su salto!
+            if (colsPerRow - currentPosInRow < 1.5) {
+              const letter = el.dataset.letter;
+              const breakDiv = container.querySelector(`.separator-break[data-letter="${letter}"]`);
+              if (breakDiv) {
+                breakDiv.classList.remove('d-none');
+              }
+              currentPosInRow = 0;
+            }
+            currentPosInRow += 0.5;
+          } else {
+            if (currentPosInRow + 1 > colsPerRow) {
+              currentPosInRow = 0;
+            }
+            currentPosInRow += 1.0;
+          }
+          
+          if (currentPosInRow >= colsPerRow) {
+            currentPosInRow = 0;
+          }
+        });
+      }
+
+      window.addEventListener('resize', adjustGridSeparators);
+
+      function updateAlphabetNav() {
+        const alphabetNav = document.getElementById('alphabet-nav');
+        if (!alphabetNav) return;
+        
+        const selector = currentViewMode === 'list' ? '#view-list-tbody > tr:not(.separator-row)' : '#view-grid-container > .col:not(.separator-col)';
+        const elements = document.querySelectorAll(selector);
+        
+        const activeInitials = new Set();
+        elements.forEach(el => {
+          if (!el.classList.contains('d-none')) {
+            const name = el.dataset.name || '';
+            const firstChar = name.charAt(0).toUpperCase();
+            let normalizedChar = firstChar;
+            if (firstChar !== 'Ñ') {
+              normalizedChar = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+            if (/^[0-9\W]/.test(normalizedChar)) {
+              activeInitials.add('#');
+            } else {
+              activeInitials.add(normalizedChar);
+            }
+          }
+        });
+        
+        const buttons = alphabetNav.querySelectorAll('.alphabet-link');
+        buttons.forEach(btn => {
+          const letter = btn.textContent;
+          if (activeInitials.has(letter)) {
+            btn.classList.remove('disabled');
+            btn.classList.add('has-shows');
+          } else {
+            btn.classList.add('disabled');
+            btn.classList.remove('has-shows');
+          }
+        });
+      }
+
+      function initAlphabetNav() {
+        const alphabetNav = document.getElementById('alphabet-nav');
+        if (!alphabetNav) return;
+        
+        const letters = ['#','A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+        alphabetNav.innerHTML = '';
+        
+        letters.forEach(letter => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'alphabet-link disabled';
+          btn.textContent = letter;
+          btn.title = `Ir a la letra ${letter}`;
+          
+          btn.addEventListener('click', () => {
+            const selector = currentViewMode === 'list' ? '.separator-row' : '.separator-col';
+            const elements = document.querySelectorAll(selector);
+            const target = Array.from(elements).find(el => {
+              if (el.classList.contains('d-none')) return false;
+              return el.dataset.letter === letter.toLowerCase();
+            });
+            
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              
+              // Destello de foco para accesibilidad en el separador
+              const innerCard = target.querySelector('.card, td');
+              if (innerCard) {
+                innerCard.style.transition = 'all 0.3s ease';
+                const originalBorder = innerCard.style.borderColor;
+                const originalShadow = innerCard.style.boxShadow;
+                
+                innerCard.style.borderColor = 'var(--bs-purple)';
+                innerCard.style.boxShadow = '0 0 15px rgba(111, 66, 193, 0.5)';
+                
+                setTimeout(() => {
+                  innerCard.style.borderColor = originalBorder;
+                  innerCard.style.boxShadow = originalShadow;
+                }, 1000);
+              }
+            }
+          });
+          
+          alphabetNav.appendChild(btn);
+        });
+        
+        updateAlphabetNav();
       }
 
       // Aplicar filtros iniciales
       applyFilters();
+
+      // Inicializar navegación alfabética lateral
+      initAlphabetNav();
 
       toggleBtn.addEventListener('click', () => {
         hideCompleted = !hideCompleted;
