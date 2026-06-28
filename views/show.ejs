@@ -185,12 +185,21 @@
       allImages.push({ url: posters[i], type: 'Póster' });
     }
   }
+
+  // Generador pseudo-aleatorio determinista para el diseño de la galería
+  function getHashCode(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+  }
 %>
 
 <% if (allImages.length > 0) { %>
-<!-- Cargar scripts de Masonry e imagesLoaded -->
+<!-- Cargar scripts de Packery e imagesLoaded -->
 <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
-<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+<script src="https://unpkg.com/packery@2/dist/packery.pkgd.min.js"></script>
 
 <!-- Galería de la Serie (Masonry) -->
 <div class="card glass-card p-4 rounded-4 shadow border-0 mb-5">
@@ -202,7 +211,25 @@
     <div class="masonry-grid-sizer"></div>
     
     <% allImages.forEach((img, idx) => { %>
-      <div class="masonry-grid-item <%= img.type === 'Fondo' ? 'grid-item-double' : '' %>" onclick="openPhotoLightbox(<%= idx %>)">
+      <% 
+        const hash = getHashCode(img.url);
+        let widthClass = '';
+        if (img.type === 'Póster') {
+          // Un 15% de los pósteres serán de doble ancho (destacados)
+          widthClass = (hash % 7 === 0) ? 'grid-item-double' : '';
+        } else if (img.type === 'Fondo') {
+          // Los fondos se distribuyen en un 20% triple, 50% doble y 30% simple
+          const mod = hash % 10;
+          if (mod < 2) {
+            widthClass = 'grid-item-triple';
+          } else if (mod < 7) {
+            widthClass = 'grid-item-double';
+          } else {
+            widthClass = '';
+          }
+        }
+      %>
+      <div class="masonry-grid-item <%= widthClass %>" onclick="openPhotoLightbox(<%= idx %>)">
         <div class="masonry-card rounded-4 overflow-hidden position-relative shadow-sm">
           <img src="<%= img.url %>" alt="<%= img.type %> de <%= show.name %>" class="w-100 h-auto d-block">
           
@@ -439,12 +466,12 @@
     }
   });
 
-  // Inicializar Masonry
+  // Inicializar Packery (llena los espacios vacíos / bin-packing)
   document.addEventListener('DOMContentLoaded', () => {
     const grid = document.querySelector('#masonryGrid');
     if (grid) {
       imagesLoaded(grid, () => {
-        new Masonry(grid, {
+        new Packery(grid, {
           itemSelector: '.masonry-grid-item',
           columnWidth: '.masonry-grid-sizer',
           percentPosition: true,
@@ -790,6 +817,21 @@
   @media (min-width: 1200px) {
     .grid-item-double {
       width: calc(((100% - 90px) / 7) * 2 + 15px) !important;
+    }
+  }
+
+  /* Elementos de triple ancho */
+  .grid-item-triple {
+    width: 100% !important;
+  }
+  @media (min-width: 992px) {
+    .grid-item-triple {
+      width: calc(((100% - 60px) / 5) * 3 + 30px) !important;
+    }
+  }
+  @media (min-width: 1200px) {
+    .grid-item-triple {
+      width: calc(((100% - 90px) / 7) * 3 + 30px) !important;
     }
   }
   .masonry-card {
