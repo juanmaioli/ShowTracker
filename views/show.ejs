@@ -202,7 +202,7 @@
     <div class="masonry-grid-sizer"></div>
     
     <% allImages.forEach((img, idx) => { %>
-      <div class="masonry-grid-item" onclick="openPhotoLightbox(<%= idx %>)">
+      <div class="masonry-grid-item <%= img.type === 'Fondo' ? 'grid-item-double' : '' %>" onclick="openPhotoLightbox(<%= idx %>)">
         <div class="masonry-card rounded-4 overflow-hidden position-relative shadow-sm">
           <img src="<%= img.url %>" alt="<%= img.type %> de <%= show.name %>" class="w-100 h-auto d-block">
           
@@ -772,6 +772,25 @@
   .masonry-grid-item {
     float: left;
     margin-bottom: 15px;
+  }
+  /* Elementos de doble ancho */
+  .grid-item-double {
+    width: 100% !important;
+  }
+  @media (min-width: 768px) {
+    .grid-item-double {
+      width: calc(((100% - 30px) / 3) * 2 + 15px) !important;
+    }
+  }
+  @media (min-width: 992px) {
+    .grid-item-double {
+      width: calc(((100% - 60px) / 5) * 2 + 15px) !important;
+    }
+  }
+  @media (min-width: 1200px) {
+    .grid-item-double {
+      width: calc(((100% - 90px) / 7) * 2 + 15px) !important;
+    }
   }
   .masonry-card {
     cursor: pointer;
