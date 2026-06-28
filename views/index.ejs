@@ -43,10 +43,10 @@
         <label class="btn btn-outline-primary rounded-pill px-3 py-1 border-0" for="viewModeList" style="font-size: 0.75rem; cursor: pointer;" title="Vista en Lista">📝</label>
       </div>
 
-      <!-- Botones de Ordenamiento -->
-      <div class="btn-group btn-group rounded-pill overflow-hidden border border-secondary border-opacity-25 bg-dark bg-opacity-30 p-0.5" role="group" id="sort-mode-group">
-        <button type="button" id="sortAlphaBtn" class="btn btn-primary rounded-pill px-3 py-1 border-0" style="font-size: 0.75rem;" title="Ordenar alfabéticamente">🔤</button>
-        <button type="button" id="sortScoreBtn" class="btn btn-outline-secondary rounded-pill px-3 py-1 border-0 text-white" style="font-size: 0.75rem;" title="Ordenar por calificación descendente">⭐</button>
+      <!-- Buscador por Nombre -->
+      <div class="position-relative ms-0 ms-sm-2" style="min-width: 180px;">
+        <input type="text" id="search-shows-input" class="form-control form-control-sm rounded-pill bg-body-tertiary border-secondary border-opacity-25 ps-3 pe-4" placeholder="Buscar por nombre..." title="Filtrar por nombre" style="font-size: 0.75rem; height: 31px; width: 100%;">
+        <span class="position-absolute end-0 top-50 translate-middle-y pe-3 text-secondary small" style="pointer-events: none; font-size: 0.75rem;">🔍</span>
       </div>
     <% } %>
   </div>
@@ -243,6 +243,15 @@
       </div>
     </div>
   </div>
+
+  <!-- Mensaje de no resultados en búsqueda -->
+  <div id="no-search-results-message" class="row my-5 d-none">
+    <div class="col-12 text-center py-5">
+      <div class="display-4 mb-3">🔍</div>
+      <h4>No se encontraron series</h4>
+      <p class="text-secondary small">Probá buscando con otro nombre o borrando el filtro.</p>
+    </div>
+  </div>
 <% } %>
 
 <script>
@@ -283,64 +292,7 @@
       });
     }
 
-    // Lógica para ordenar los elementos (Alfabéticamente / Calificación)
-    const sortAlphaBtn = document.getElementById('sortAlphaBtn');
-    const sortScoreBtn = document.getElementById('sortScoreBtn');
-    
-    function sortElements(criteria) {
-      if (!sortAlphaBtn || !sortScoreBtn) return;
-
-      // Ordenar Grid (Tarjetas)
-      if (gridContainer) {
-        const cards = Array.from(gridContainer.children);
-        cards.sort((a, b) => {
-          if (criteria === 'alpha') {
-            return a.dataset.name.localeCompare(b.dataset.name);
-          } else {
-            return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
-          }
-        });
-        cards.forEach(card => gridContainer.appendChild(card));
-      }
-      
-      // Ordenar Lista (Tabla)
-      const listTbody = document.getElementById('view-list-tbody');
-      if (listTbody) {
-        const rows = Array.from(listTbody.children);
-        rows.sort((a, b) => {
-          if (criteria === 'alpha') {
-            return a.dataset.name.localeCompare(b.dataset.name);
-          } else {
-            return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
-          }
-        });
-        rows.forEach(row => listTbody.appendChild(row));
-      }
-      
-      // Cambiar clases de los botones para reflejar el estado activo
-      if (criteria === 'alpha') {
-        sortAlphaBtn.classList.add('btn-primary');
-        sortAlphaBtn.classList.remove('btn-outline-secondary');
-        sortScoreBtn.classList.add('btn-outline-secondary');
-        sortScoreBtn.classList.remove('btn-primary');
-        localStorage.setItem('showtracker_sort_by', 'alpha');
-      } else {
-        sortScoreBtn.classList.add('btn-primary');
-        sortScoreBtn.classList.remove('btn-outline-secondary');
-        sortAlphaBtn.classList.add('btn-outline-secondary');
-        sortAlphaBtn.classList.remove('btn-primary');
-        localStorage.setItem('showtracker_sort_by', 'score');
-      }
-    }
-    
-    if (sortAlphaBtn && sortScoreBtn) {
-      // Cargar preferencia de ordenamiento
-      const savedSort = localStorage.getItem('showtracker_sort_by') || 'alpha';
-      sortElements(savedSort);
-      
-      sortAlphaBtn.addEventListener('click', () => sortElements('alpha'));
-      sortScoreBtn.addEventListener('click', () => sortElements('score'));
-    }
+    // Nota: Las series se ordenan alfabéticamente de forma predeterminada desde el servidor
 
     const toggleEndedBtn = document.getElementById('toggle-ended-btn');
     const toggleAbandonedBtn = document.getElementById('toggle-abandoned-btn');
@@ -357,14 +309,18 @@
       let hideEnded = localStorage.getItem('hideEndedSeries') === 'true';
       let showOnlyAbandoned = localStorage.getItem('showOnlyAbandonedSeries') === 'true';
 
+      const searchInput = document.getElementById('search-shows-input');
+
       function applyFilters() {
         const allCards = document.querySelectorAll('#view-grid-container > .col');
         const allRows = document.querySelectorAll('#view-list-tbody > tr');
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
         
         const filterItem = (el) => {
           const isCompleted = el.dataset.completed === 'true';
           const isEnded = el.dataset.status === 'ended';
           const isAbandoned = el.dataset.abandoned === 'true';
+          const name = el.dataset.name || '';
           
           let shouldHide = false;
           if (showOnlyAbandoned) {
@@ -373,6 +329,11 @@
           } else {
             // Filtros normales
             shouldHide = (hideCompleted && isCompleted) || (hideEnded && isEnded);
+          }
+          
+          // Filtrar también por nombre si corresponde
+          if (!shouldHide && searchQuery !== '') {
+            shouldHide = !name.includes(searchQuery);
           }
           
           if (shouldHide) {
@@ -384,6 +345,23 @@
 
         allCards.forEach(filterItem);
         allRows.forEach(filterItem);
+
+        // Controlar si se muestran resultados o no
+        let visibleCount = 0;
+        allCards.forEach(el => {
+          if (!el.classList.contains('d-none')) {
+            visibleCount++;
+          }
+        });
+        
+        const noResultsMsg = document.getElementById('no-search-results-message');
+        if (noResultsMsg) {
+          if (visibleCount === 0) {
+            noResultsMsg.classList.remove('d-none');
+          } else {
+            noResultsMsg.classList.add('d-none');
+          }
+        }
 
         // Actualizar botón de completadas
         if (hideCompleted) {
@@ -452,6 +430,16 @@
         localStorage.setItem('showOnlyAbandonedSeries', showOnlyAbandoned);
         applyFilters();
       });
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+        searchInput.addEventListener('keyup', (e) => {
+          if (e.key === 'Escape') {
+            searchInput.value = '';
+            applyFilters();
+          }
+        });
+      }
     }
   });
 </script>
