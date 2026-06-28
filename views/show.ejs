@@ -172,6 +172,99 @@
 </div>
 <% } %>
 
+<% 
+  const allImages = [];
+  const backgrounds = artworks.backgrounds || [];
+  const posters = artworks.posters || [];
+  const maxLength = Math.max(backgrounds.length, posters.length);
+  for (let i = 0; i < maxLength; i++) {
+    if (i < backgrounds.length) {
+      allImages.push({ url: backgrounds[i], type: 'Fondo' });
+    }
+    if (i < posters.length) {
+      allImages.push({ url: posters[i], type: 'Póster' });
+    }
+  }
+%>
+
+<% if (allImages.length > 0) { %>
+<!-- Cargar scripts de Masonry e imagesLoaded -->
+<script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+
+<!-- Galería de la Serie (Masonry) -->
+<div class="card glass-card p-4 rounded-4 shadow border-0 mb-5">
+  <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
+    <span>🖼️</span> Galería de Artworks locales
+  </h2>
+
+  <div class="masonry-grid" id="masonryGrid">
+    <div class="masonry-grid-sizer"></div>
+    
+    <% allImages.forEach((img, idx) => { %>
+      <div class="masonry-grid-item" onclick="openPhotoLightbox(<%= idx %>)">
+        <div class="masonry-card rounded-4 overflow-hidden position-relative shadow-sm">
+          <img src="<%= img.url %>" alt="<%= img.type %> de <%= show.name %>" class="w-100 h-auto d-block">
+          
+          <div class="masonry-overlay d-flex flex-column justify-content-between p-3 position-absolute top-0 start-0 w-100 h-100">
+            <div class="text-end">
+              <a href="<%= img.url %>" target="_blank" onclick="event.stopPropagation();" class="btn btn-sm btn-dark bg-opacity-75 border-0 rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;" title="Abrir en pestaña nueva">
+                <span>↗</span>
+              </a>
+            </div>
+            <div class="text-start">
+              <span class="badge bg-dark bg-opacity-75 border border-secondary border-opacity-25 py-1 px-2 small">
+                <%= img.type %> <%= idx + 1 %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<!-- Lightbox Modal para Galería Masonry -->
+<div class="modal fade" id="photoLightboxModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content bg-transparent border-0 shadow-none text-white">
+      <div class="modal-body p-0 position-relative text-center d-flex flex-column align-items-center justify-content-center">
+        <!-- Botón para cerrar -->
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Cerrar" style="z-index: 1050; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"></button>
+        
+        <!-- Contenedor principal con navegación -->
+        <div class="d-flex align-items-center justify-content-between w-100" style="max-height: 85vh;">
+          <!-- Flecha izquierda -->
+          <button class="btn btn-link text-white p-2 border-0" id="lightboxPrevBtn" onclick="navigateLightbox(-1)" style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 1040; text-decoration: none;">
+            ◀
+          </button>
+          
+          <!-- Imagen ampliada -->
+          <div class="mx-auto overflow-hidden rounded-4 shadow-lg border border-secondary border-opacity-10 bg-black bg-opacity-75" style="max-width: 80%; max-height: 80vh;">
+            <img id="lightboxImg" src="" alt="Foto ampliada" class="img-fluid object-fit-contain" style="max-height: 80vh; transition: opacity 0.2s ease;">
+          </div>
+          
+          <!-- Flecha derecha -->
+          <button class="btn btn-link text-white p-2 border-0" id="lightboxNextBtn" onclick="navigateLightbox(1)" style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 1040; text-decoration: none;">
+            ▶
+          </button>
+        </div>
+        
+        <!-- Barra de herramientas inferior -->
+        <div class="mt-3 bg-dark bg-opacity-75 py-2 px-4 rounded-pill border border-secondary border-opacity-25 d-flex align-items-center gap-3" style="backdrop-filter: blur(10px);">
+          <span id="lightboxIndexLabel" class="text-white fw-medium fs-6">Foto X de Y</span>
+          <span class="text-white-50">|</span>
+          <a href="" id="lightboxExternalLink" target="_blank" class="lightbox-external-link text-decoration-none d-inline-flex align-items-center gap-1 small text-white" title="Abrir en pestaña nueva">
+            <span>↗</span>
+            <span>Abrir en pestaña nueva</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <!-- Acordeón de Temporadas -->
 <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
   <span>📅</span> Temporadas y Episodios
@@ -227,14 +320,14 @@
             </button>
 
             <!-- Flecha para contraer/expandir -->
-            <button class="btn btn-link text-light p-1 ms-2 accordion-toggle-arrow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeason-<%= season.number %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" style="text-decoration: none;" title="Mostrar/Ocultar episodios">
+            <button class="btn btn-link text-light p-1 ms-2 accordion-toggle-arrow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeason-<%= season.number %>" aria-expanded="false" style="text-decoration: none;" title="Mostrar/Ocultar episodios">
               <span class="collapse-icon">▼</span>
             </button>
           </div>
         </div>
       </h2>
       
-      <div id="collapseSeason-<%= season.number %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" data-bs-parent="#seasonsAccordion">
+      <div id="collapseSeason-<%= season.number %>" class="accordion-collapse collapse" data-bs-parent="#seasonsAccordion">
         <div class="accordion-body p-0">
           <div class="list-group list-group-flush">
             <% season.episodes.forEach(ep => { %>
@@ -271,154 +364,93 @@
   <% }) %>
 </div>
 
-<% if ((artworks.posters && artworks.posters.length > 0) || (artworks.backgrounds && artworks.backgrounds.length > 0)) { %>
-<!-- Galería de la Serie -->
-<div class="card glass-card p-4 rounded-4 shadow border-0 mt-5 mb-4">
-  <h2 class="fs-4 fw-bold mb-4 d-flex align-items-center gap-2">
-    <span>🖼️</span> Galería de Artworks locales
-  </h2>
-
-  <!-- Pestañas -->
-  <ul class="nav nav-pills mb-4 gap-2" id="galleryTabs" role="tablist">
-    <% if (artworks.backgrounds && artworks.backgrounds.length > 0) { %>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active rounded-pill px-4" id="bg-tab" data-bs-toggle="tab" data-bs-target="#bg-tab-pane" type="button" role="tab" aria-controls="bg-tab-pane" aria-selected="true">
-          Fondos de Pantalla (<%= artworks.backgrounds.length %>)
-        </button>
-      </li>
-    <% } %>
-    <% if (artworks.posters && artworks.posters.length > 0) { %>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link <%= (!artworks.backgrounds || artworks.backgrounds.length === 0) ? 'active' : '' %> rounded-pill px-4" id="posters-tab" data-bs-toggle="tab" data-bs-target="#posters-tab-pane" type="button" role="tab" aria-controls="posters-tab-pane" aria-selected="false">
-          Posters Alternativos (<%= artworks.posters.length %>)
-        </button>
-      </li>
-    <% } %>
-  </ul>
-
-  <!-- Contenido de las pestañas -->
-  <div class="tab-content" id="galleryTabsContent">
-    <% if (artworks.backgrounds && artworks.backgrounds.length > 0) { %>
-      <div class="tab-pane fade show active" id="bg-tab-pane" role="tabpanel" aria-labelledby="bg-tab" tabindex="0">
-        <style>
-          .thumbnail-wrapper img {
-            transition: opacity 0.2s ease;
-          }
-          .thumbnail-wrapper:hover img {
-            opacity: 1 !important;
-          }
-          .cursor-zoom {
-            cursor: zoom-in;
-          }
-        </style>
-        
-        <!-- Visor Interactivo de Fondos de Pantalla -->
-        <div class="d-flex flex-column align-items-center">
-          <div class="main-bg-viewer rounded-4 overflow-hidden shadow mb-4 bg-black bg-opacity-25 border border-secondary border-opacity-10 position-relative w-100" style="max-width: 800px; aspect-ratio: 16/9;">
-            <a href="<%= artworks.backgrounds[0] %>" id="main-bg-link" target="_blank" title="Abrir fondo en tamaño completo en pestaña nueva" class="d-block w-100 h-100 cursor-zoom">
-              <img id="main-bg-img" src="<%= artworks.backgrounds[0] %>" class="w-100 h-100 object-fit-contain" alt="Fondo de <%= show.name %>" style="transition: opacity 0.2s ease;">
-            </a>
-          </div>
-          
-          <% if (artworks.backgrounds.length > 1) { %>
-            <!-- Tira de Miniaturas -->
-            <div class="d-flex gap-2 overflow-x-auto w-100 pb-2 px-1 justify-content-start" style="max-width: 800px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
-              <% artworks.backgrounds.forEach((bg, idx) => { %>
-                <div class="thumbnail-wrapper rounded-3 overflow-hidden border cursor-pointer bg-dark transition-all <%= idx === 0 ? 'border-primary border-2 shadow' : 'border-secondary border-opacity-25' %>" 
-                     style="width: 120px; aspect-ratio: 16/9; flex-shrink: 0; transition: all 0.2s ease;"
-                     onclick="selectBackground('<%= bg %>', this)"
-                     title="Ver fondo <%= idx + 1 %>">
-                  <img src="<%= bg %>" class="w-100 h-100 object-fit-cover <%= idx === 0 ? 'opacity-100' : 'opacity-70' %>" alt="Miniatura <%= idx + 1 %>">
-                </div>
-              <% }) %>
-            </div>
-          <% } %>
-        </div>
-      </div>
-    <% } %>
-
-    <% if (artworks.posters && artworks.posters.length > 0) { %>
-      <div class="tab-pane fade <%= (!artworks.backgrounds || artworks.backgrounds.length === 0) ? 'show active' : '' %>" id="posters-tab-pane" role="tabpanel" aria-labelledby="posters-tab" tabindex="0">
-        <!-- Grid de Posters Alternativos -->
-        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
-          <% artworks.posters.forEach((poster, idx) => { %>
-            <div class="col">
-              <div class="card bg-dark border-secondary border-opacity-25 rounded-3 overflow-hidden shadow-sm h-100">
-                <a href="<%= poster %>" target="_blank" title="Abrir poster en una nueva pestaña" class="d-block h-100 cursor-zoom">
-                  <img src="<%= poster %>" class="w-100 object-fit-cover" style="aspect-ratio: 2/3;" alt="Poster de <%= show.name %>" onerror="this.src='/img/placeholder.svg';">
-                </a>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-      </div>
-    <% } %>
-  </div>
-</div>
-<% } %>
-
 <script>
-  // Cambiar visor de imagen de fondo
-  function selectBackground(bgUrl, thumbElement) {
-    const mainImg = document.getElementById('main-bg-img');
-    const mainLink = document.getElementById('main-bg-link');
-    if (!mainImg || !mainLink) return;
+  // Lógica de Galería Masonry y Lightbox
+  const artistImages = <%- (typeof allImages !== 'undefined' && allImages && allImages.length > 0) ? JSON.stringify(allImages.map(img => img.url)) : '[]' %>;
+  let currentPhotoIndex = 0;
+  let photoLightboxModalInstance = null;
 
-    mainImg.style.opacity = '0';
-    setTimeout(() => {
-      mainImg.src = bgUrl;
-      mainLink.href = bgUrl;
-      mainImg.style.opacity = '1';
-    }, 150);
-
-    const wrappers = document.querySelectorAll('.thumbnail-wrapper');
-    wrappers.forEach(w => {
-      w.classList.remove('border-primary', 'border-2', 'shadow');
-      w.classList.add('border-secondary', 'border-opacity-25');
-      const img = w.querySelector('img');
-      if (img) img.classList.remove('opacity-100');
-      if (img) img.classList.add('opacity-70');
-    });
-
-    thumbElement.classList.add('border-primary', 'border-2', 'shadow');
-    thumbElement.classList.remove('border-secondary', 'border-opacity-25');
-    const activeImg = thumbElement.querySelector('img');
-    if (activeImg) {
-      activeImg.classList.add('opacity-100');
-      activeImg.classList.remove('opacity-70');
+  function openPhotoLightbox(index) {
+    currentPhotoIndex = index;
+    const imgUrl = artistImages[currentPhotoIndex];
+    
+    const lightboxImg = document.getElementById('lightboxImg');
+    const indexLabel = document.getElementById('lightboxIndexLabel');
+    const externalLink = document.getElementById('lightboxExternalLink');
+    if (!lightboxImg || !indexLabel) return;
+    
+    lightboxImg.src = imgUrl;
+    indexLabel.textContent = `Imagen ${currentPhotoIndex + 1} de ${artistImages.length}`;
+    if (externalLink) externalLink.href = imgUrl;
+    
+    if (!photoLightboxModalInstance) {
+      const modalEl = document.getElementById('photoLightboxModal');
+      photoLightboxModalInstance = new bootstrap.Modal(modalEl);
+      
+      modalEl.addEventListener('click', (e) => {
+        const isClickOnInteractive = e.target.closest('#lightboxImg') || 
+                                     e.target.closest('#lightboxPrevBtn') || 
+                                     e.target.closest('#lightboxNextBtn') ||
+                                     e.target.closest('#lightboxIndexLabel') ||
+                                     e.target.closest('#lightboxExternalLink') ||
+                                     e.target.closest('.rounded-pill');
+        if (!isClickOnInteractive) {
+          photoLightboxModalInstance.hide();
+        }
+      });
     }
+    
+    photoLightboxModalInstance.show();
   }
 
-  // Navegación por teclado (Flechas Izquierda / Derecha) para la galería de fondos
+  function navigateLightbox(direction) {
+    if (artistImages.length <= 1) return;
+    
+    const lightboxImg = document.getElementById('lightboxImg');
+    const indexLabel = document.getElementById('lightboxIndexLabel');
+    const externalLink = document.getElementById('lightboxExternalLink');
+    if (!lightboxImg || !indexLabel) return;
+    
+    currentPhotoIndex = (currentPhotoIndex + direction + artistImages.length) % artistImages.length;
+    const nextImgUrl = artistImages[currentPhotoIndex];
+    
+    lightboxImg.style.opacity = '0';
+    setTimeout(() => {
+      lightboxImg.src = nextImgUrl;
+      indexLabel.textContent = `Imagen ${currentPhotoIndex + 1} de ${artistImages.length}`;
+      if (externalLink) externalLink.href = nextImgUrl;
+      lightboxImg.style.opacity = '1';
+    }, 150);
+  }
+
+  // Teclado para modal
   document.addEventListener('keydown', (e) => {
-    // Solo si la pestaña de fondos está activa
-    const bgTab = document.getElementById('bg-tab');
-    if (bgTab && bgTab.classList.contains('active')) {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        const wrappers = Array.from(document.querySelectorAll('.thumbnail-wrapper'));
-        if (wrappers.length <= 1) return;
-
-        // Encontrar índice activo basándonos en la presencia de la clase border-primary
-        const activeIdx = wrappers.findIndex(w => w.classList.contains('border-primary'));
-        if (activeIdx === -1) return;
-
-        // Prevenir el scroll por defecto de la página cuando se presionan las flechas
+    const photoModalEl = document.getElementById('photoLightboxModal');
+    const isPhotoModalOpen = photoModalEl && photoModalEl.classList.contains('show');
+    
+    if (isPhotoModalOpen) {
+      if (e.key === 'ArrowRight') {
         e.preventDefault();
-
-        let nextIdx;
-        if (e.key === 'ArrowRight') {
-          nextIdx = (activeIdx + 1) % wrappers.length;
-        } else {
-          nextIdx = (activeIdx - 1 + wrappers.length) % wrappers.length;
-        }
-
-        const nextThumb = wrappers[nextIdx];
-        if (nextThumb) {
-          nextThumb.click();
-          // Asegurar scroll automático de la miniatura dentro de su tira
-          nextThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-        }
+        navigateLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateLightbox(-1);
       }
+    }
+  });
+
+  // Inicializar Masonry
+  document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.querySelector('#masonryGrid');
+    if (grid) {
+      imagesLoaded(grid, () => {
+        new Masonry(grid, {
+          itemSelector: '.masonry-grid-item',
+          columnWidth: '.masonry-grid-sizer',
+          percentPosition: true,
+          gutter: 15
+        });
+      });
     }
   });
 
@@ -708,6 +740,76 @@
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+  }
+
+  /* Pinterest Masonry Layout */
+  .masonry-grid {
+    width: 100%;
+    margin: 0 auto;
+  }
+  .masonry-grid-sizer,
+  .masonry-grid-item {
+    width: calc((100% - 15px) / 2);
+  }
+  @media (min-width: 768px) {
+    .masonry-grid-sizer,
+    .masonry-grid-item {
+      width: calc((100% - 30px) / 3);
+    }
+  }
+  @media (min-width: 992px) {
+    .masonry-grid-sizer,
+    .masonry-grid-item {
+      width: calc((100% - 60px) / 5);
+    }
+  }
+  @media (min-width: 1200px) {
+    .masonry-grid-sizer,
+    .masonry-grid-item {
+      width: calc((100% - 90px) / 7);
+    }
+  }
+  .masonry-grid-item {
+    float: left;
+    margin-bottom: 15px;
+  }
+  .masonry-card {
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    transition: transform 0.25s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.25s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.25s ease;
+  }
+  .masonry-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    border-color: var(--bs-purple) !important;
+  }
+  .masonry-card img {
+    transition: filter 0.25s ease;
+  }
+  .masonry-card:hover img {
+    filter: brightness(0.85);
+  }
+  .masonry-overlay {
+    opacity: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
+    transition: opacity 0.25s ease;
+  }
+  .masonry-card:hover .masonry-overlay {
+    opacity: 1;
+  }
+  .lightbox-external-link {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-weight: 500;
+    transition: color 0.15s ease-in-out;
+  }
+  .lightbox-external-link:hover {
+    color: var(--bs-purple) !important;
+    text-decoration: underline !important;
+  }
+  #photoLightboxModal {
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.4);
   }
 </style>
 
