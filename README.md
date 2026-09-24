@@ -20,7 +20,8 @@ Aplicación web premium para el seguimiento de tus series de televisión preferi
 *   **Indicadores de Progreso y Calificación en Esquinas (Inclinados):**
     *   **Calificación Propia Local:** Un triángulo púrpura decorativo de 56px en la esquina superior izquierda que muestra la calificación promedio dada por el usuario (0-5★) inclinada simétricamente a -45 grados, reemplazando el score remoto de TheTVDB.
     *   **Porcentaje de Completado:** Al alcanzar el 100% de progreso, la barra de visualización se tiñe de verde y se superpone un triángulo verde distintivo de 64px en la esquina superior derecha con el texto "100%" inclinado a 45 grados.
-*   **Galería Packery Unificada con Visor Lightbox:**
+*   **Galería de Artworks con Contador y Visor Lightbox:**
+    *   **Encabezado y Contador en Alto Contraste:** Título simplificado a **Artworks** acompañado de una insignia violeta destacada en alto contraste con el número total de posters y fondos disponibles.
     *   **Grilla Pinterest con Empaquetado Compacto (Packery.js):** Detalle de serie con una galería unificada estilo Pinterest que utiliza Packery para encajar las imágenes de forma compacta (bin-packing), eliminando huecos o espacios vacíos.
     *   **Ancho Mixto Asimétrico y Responsivo (1, 2 y 3 Columnas):** Distribución de imágenes en base a anchos de 1, 2 o 3 columnas que escala dinámicamente de 2 a 7 columnas en escritorios.
     *   **Distribución Aleatoria Determinista:** Asignación orgánica de tamaños basada en un hash de la URL de cada imagen para mantener la grilla idéntica entre recargas pero visualmente desordenada. Los pósteres se destacan opcionalmente a 2 columnas y los fondos varían entre 1, 2 y 3 columnas.
