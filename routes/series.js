@@ -316,7 +316,7 @@ router.post('/seguir', async (req, res) => {
       }
     }
 
-    // Guardar el elenco (cast) en la tabla series_cast (máximo 12 personajes únicos)
+    // Guardar TODO el elenco (cast) en la tabla series_cast (sin límite de actores, únicos)
     if (series.characters && Array.isArray(series.characters)) {
       const insertCast = db.prepare(`
         INSERT INTO series_cast (series_id, actor_name, character_name, image, sort_order)
@@ -335,30 +335,38 @@ router.post('/seguir', async (req, res) => {
           return true;
         }
         return false;
-      }).slice(0, 12);
+      });
 
       const downloadedCast = [];
+      const castChunks = [];
+      for (let i = 0; i < characters.length; i += 8) {
+        castChunks.push(characters.slice(i, i + 8));
+      }
 
-      await Promise.all(characters.map(async (char, i) => {
-        const actorName = (char.personName || 'Actor Desconocido').trim();
-        const charName = (char.name || 'Personaje Desconocido').trim();
-        const imgUrl = char.image || char.personImgURL;
-        
-        let localCastImgPath = null;
-        if (imgUrl) {
-          try {
-            const filenameId = `${id}-actor-${char.id || i}`;
-            localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
-          } catch (err) {
-            console.error(`Error descargando imagen de actor ${actorName} para serie ${id}:`, err.message);
+      for (let c = 0; c < castChunks.length; c++) {
+        const chunk = castChunks[c];
+        await Promise.all(chunk.map(async (char, idx) => {
+          const absoluteIndex = c * 8 + idx;
+          const actorName = (char.personName || 'Actor Desconocido').trim();
+          const charName = (char.name || 'Personaje Desconocido').trim();
+          const imgUrl = char.image || char.personImgURL;
+          
+          let localCastImgPath = null;
+          if (imgUrl) {
+            try {
+              const filenameId = `${id}-actor-${char.id || absoluteIndex}`;
+              localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
+            } catch (err) {
+              console.error(`Error descargando imagen de actor ${actorName} para serie ${id}:`, err.message);
+              localCastImgPath = '/img/cast-placeholder.svg';
+            }
+          } else {
             localCastImgPath = '/img/cast-placeholder.svg';
           }
-        } else {
-          localCastImgPath = '/img/cast-placeholder.svg';
-        }
 
-        downloadedCast.push({ actorName, charName, localCastImgPath, sort: char.sort || i });
-      }));
+          downloadedCast.push({ actorName, charName, localCastImgPath, sort: char.sort || absoluteIndex });
+        }));
+      }
 
       // Insertar en la DB
       for (const item of downloadedCast) {
@@ -548,7 +556,7 @@ router.post('/:id/actualizar', async (req, res) => {
       }
     }
 
-    // Guardar el elenco (cast) único
+    // Guardar TODO el elenco (cast) único sin límite de actores
     if (series.characters && Array.isArray(series.characters)) {
       const insertCast = db.prepare(`
         INSERT INTO series_cast (series_id, actor_name, character_name, image, sort_order)
@@ -567,28 +575,36 @@ router.post('/:id/actualizar', async (req, res) => {
           return true;
         }
         return false;
-      }).slice(0, 12);
+      });
 
       const downloadedCast = [];
+      const castChunks = [];
+      for (let i = 0; i < characters.length; i += 8) {
+        castChunks.push(characters.slice(i, i + 8));
+      }
 
-      await Promise.all(characters.map(async (char, i) => {
-        const actorName = (char.personName || 'Actor Desconocido').trim();
-        const charName = (char.name || 'Personaje Desconocido').trim();
-        const imgUrl = char.image || char.personImgURL;
-        
-        let localCastImgPath = null;
-        if (imgUrl) {
-          try {
-            const filenameId = `${id}-actor-${char.id || i}`;
-            localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
-          } catch (err) {
+      for (let c = 0; c < castChunks.length; c++) {
+        const chunk = castChunks[c];
+        await Promise.all(chunk.map(async (char, idx) => {
+          const absoluteIndex = c * 8 + idx;
+          const actorName = (char.personName || 'Actor Desconocido').trim();
+          const charName = (char.name || 'Personaje Desconocido').trim();
+          const imgUrl = char.image || char.personImgURL;
+          
+          let localCastImgPath = null;
+          if (imgUrl) {
+            try {
+              const filenameId = `${id}-actor-${char.id || absoluteIndex}`;
+              localCastImgPath = await downloadSeriesImage(imgUrl, filenameId, 'cast');
+            } catch (err) {
+              localCastImgPath = '/img/cast-placeholder.svg';
+            }
+          } else {
             localCastImgPath = '/img/cast-placeholder.svg';
           }
-        } else {
-          localCastImgPath = '/img/cast-placeholder.svg';
-        }
-        downloadedCast.push({ actorName, charName, localCastImgPath, sort: char.sort || i });
-      }));
+          downloadedCast.push({ actorName, charName, localCastImgPath, sort: char.sort || absoluteIndex });
+        }));
+      }
 
       for (const item of downloadedCast) {
         insertCast.run(id, item.actorName, item.charName, item.localCastImgPath, item.sort);
