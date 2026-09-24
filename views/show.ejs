@@ -188,7 +188,12 @@
           <div class="mx-auto overflow-hidden rounded-4 shadow-lg border border-secondary border-opacity-10 bg-black bg-opacity-75 d-flex flex-column align-items-center" style="max-width: 80%; max-height: 80vh;">
             <img id="castLightboxImg" src="" alt="Foto de actor" class="img-fluid object-fit-contain" style="max-height: 60vh; transition: opacity 0.2s ease;" onerror="this.src='/img/cast-placeholder.svg';">
             <div class="p-3 w-100 text-center border-top border-secondary border-opacity-25 bg-dark bg-opacity-75">
-              <h5 id="castLightboxActorName" class="fw-bold mb-1 text-white">Nombre del Actor</h5>
+              <h5 class="fw-bold mb-1">
+                <a href="" id="castLightboxActorLink" target="_blank" class="text-white text-decoration-none actor-tmdb-link d-inline-flex align-items-center justify-content-center gap-1" title="Buscar actor en TheMovieDB">
+                  <span id="castLightboxActorName">Nombre del Actor</span>
+                  <span class="small opacity-75">↗</span>
+                </a>
+              </h5>
               <p id="castLightboxCharName" class="text-white-50 small mb-0">Personaje</p>
             </div>
           </div>
@@ -504,12 +509,16 @@
 
     const castImg = document.getElementById('castLightboxImg');
     const actorName = document.getElementById('castLightboxActorName');
+    const actorLink = document.getElementById('castLightboxActorLink');
     const charName = document.getElementById('castLightboxCharName');
     const indexLabel = document.getElementById('castLightboxIndexLabel');
     const externalLink = document.getElementById('castLightboxExternalLink');
 
     if (castImg) castImg.src = actor.image || '/img/cast-placeholder.svg';
     if (actorName) actorName.textContent = actor.actor_name;
+    if (actorLink) {
+      actorLink.href = `https://www.themoviedb.org/search/person?language=es&query=${encodeURIComponent(actor.actor_name)}`;
+    }
     if (charName) charName.textContent = actor.character_name || 'Personaje no especificado';
     if (indexLabel) indexLabel.textContent = `Actor ${currentCastIndex + 1} de ${castList.length}`;
     if (externalLink) externalLink.href = actor.image || '#';
@@ -522,6 +531,7 @@
         const isClickOnInteractive = e.target.closest('#castLightboxImg') ||
                                      e.target.closest('#castLightboxPrevBtn') ||
                                      e.target.closest('#castLightboxNextBtn') ||
+                                     e.target.closest('#castLightboxActorLink') ||
                                      e.target.closest('.rounded-pill') ||
                                      e.target.closest('.bg-dark');
         if (!isClickOnInteractive) {
@@ -541,6 +551,7 @@
 
     const castImg = document.getElementById('castLightboxImg');
     const actorName = document.getElementById('castLightboxActorName');
+    const actorLink = document.getElementById('castLightboxActorLink');
     const charName = document.getElementById('castLightboxCharName');
     const indexLabel = document.getElementById('castLightboxIndexLabel');
     const externalLink = document.getElementById('castLightboxExternalLink');
@@ -550,6 +561,9 @@
       setTimeout(() => {
         castImg.src = actor.image || '/img/cast-placeholder.svg';
         if (actorName) actorName.textContent = actor.actor_name;
+        if (actorLink) {
+          actorLink.href = `https://www.themoviedb.org/search/person?language=es&query=${encodeURIComponent(actor.actor_name)}`;
+        }
         if (charName) charName.textContent = actor.character_name || 'Personaje no especificado';
         if (indexLabel) indexLabel.textContent = `Actor ${currentCastIndex + 1} de ${castList.length}`;
         if (externalLink) externalLink.href = actor.image || '#';
@@ -985,7 +999,8 @@
     font-weight: 500;
     transition: color 0.15s ease-in-out;
   }
-  .lightbox-external-link:hover {
+  .lightbox-external-link:hover,
+  .actor-tmdb-link:hover {
     color: var(--bs-purple) !important;
     text-decoration: underline !important;
   }
