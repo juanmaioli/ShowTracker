@@ -229,14 +229,21 @@ router.post('/seguir', async (req, res) => {
     // Guardar TODOS los posters y backgrounds en la tabla artworks (máximo 15 de cada uno para optimizar recursos)
     if (series.artworks && Array.isArray(series.artworks)) {
       const insertArtwork = db.prepare(`
-        INSERT INTO artworks (series_id, type, image)
+        INSERT OR IGNORE INTO artworks (series_id, type, image)
         VALUES (?, ?, ?)
       `);
 
-      // Descargar y guardar posters (en lotes de 8 en paralelo para evitar timeout y saturación de red)
-      const posters = series.artworks.filter(art => 
-        art.type === 2 || String(art.type).toLowerCase() === 'poster'
-      );
+      // Descargar y guardar posters únicos (en lotes de 8 en paralelo)
+      const seenPosterUrls = new Set();
+      const posters = series.artworks.filter(art => {
+        const isPoster = art.type === 2 || String(art.type).toLowerCase() === 'poster';
+        const artUrl = art.image || art.thumbnail;
+        if (isPoster && artUrl && !seenPosterUrls.has(artUrl)) {
+          seenPosterUrls.add(artUrl);
+          return true;
+        }
+        return false;
+      }).slice(0, 15);
 
       const downloadedPosters = [];
       const posterChunks = [];
@@ -266,12 +273,19 @@ router.post('/seguir', async (req, res) => {
         insertArtwork.run(id, 'poster', localArtPath);
       }
 
-      // Descargar y guardar backgrounds (en lotes de 8 en paralelo)
-      const backgrounds = series.artworks.filter(art => 
-        art.type === 3 || 
-        String(art.type).toLowerCase() === 'background' || 
-        String(art.type).toLowerCase() === 'fanart'
-      );
+      // Descargar y guardar backgrounds únicos (en lotes de 8 en paralelo)
+      const seenBgUrls = new Set();
+      const backgrounds = series.artworks.filter(art => {
+        const isBg = art.type === 3 || 
+          String(art.type).toLowerCase() === 'background' || 
+          String(art.type).toLowerCase() === 'fanart';
+        const artUrl = art.image || art.thumbnail;
+        if (isBg && artUrl && !seenBgUrls.has(artUrl)) {
+          seenBgUrls.add(artUrl);
+          return true;
+        }
+        return false;
+      }).slice(0, 15);
 
       const downloadedBackgrounds = [];
       const bgChunks = [];
@@ -302,19 +316,32 @@ router.post('/seguir', async (req, res) => {
       }
     }
 
-    // Guardar el elenco (cast) en la tabla series_cast (máximo 12 personajes para optimizar)
+    // Guardar el elenco (cast) en la tabla series_cast (máximo 12 personajes únicos)
     if (series.characters && Array.isArray(series.characters)) {
       const insertCast = db.prepare(`
         INSERT INTO series_cast (series_id, actor_name, character_name, image, sort_order)
         VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(series_id, actor_name) DO UPDATE SET
+          character_name = excluded.character_name,
+          image = excluded.image,
+          sort_order = excluded.sort_order
       `);
 
-      const characters = series.characters.slice(0, 12);
+      const seenActors = new Set();
+      const characters = series.characters.filter(char => {
+        const actorName = (char.personName || char.name || '').trim();
+        if (actorName && !seenActors.has(actorName.toLowerCase())) {
+          seenActors.add(actorName.toLowerCase());
+          return true;
+        }
+        return false;
+      }).slice(0, 12);
+
       const downloadedCast = [];
 
       await Promise.all(characters.map(async (char, i) => {
-        const actorName = char.personName || 'Actor Desconocido';
-        const charName = char.name || 'Personaje Desconocido';
+        const actorName = (char.personName || 'Actor Desconocido').trim();
+        const charName = (char.name || 'Personaje Desconocido').trim();
         const imgUrl = char.image || char.personImgURL;
         
         let localCastImgPath = null;
@@ -335,7 +362,7 @@ router.post('/seguir', async (req, res) => {
 
       // Insertar en la DB
       for (const item of downloadedCast) {
-        insertCast.run(id, item.actorName, item.character_name || item.charName, item.localCastImgPath, item.sort);
+        insertCast.run(id, item.actorName, item.charName, item.localCastImgPath, item.sort);
       }
     }
 
@@ -434,16 +461,23 @@ router.post('/:id/actualizar', async (req, res) => {
     db.prepare('DELETE FROM artworks WHERE series_id = ?').run(id);
     db.prepare('DELETE FROM series_cast WHERE series_id = ?').run(id);
 
-    // Descargar y guardar posters en paralelo (lotes de 8)
+    // Descargar y guardar posters en paralelo (lotes de 8, solo únicos)
     if (series.artworks && Array.isArray(series.artworks)) {
       const insertArtwork = db.prepare(`
-        INSERT INTO artworks (series_id, type, image)
+        INSERT OR IGNORE INTO artworks (series_id, type, image)
         VALUES (?, ?, ?)
       `);
 
-      const posters = series.artworks.filter(art => 
-        art.type === 2 || String(art.type).toLowerCase() === 'poster'
-      );
+      const seenPosterUrls = new Set();
+      const posters = series.artworks.filter(art => {
+        const isPoster = art.type === 2 || String(art.type).toLowerCase() === 'poster';
+        const artUrl = art.image || art.thumbnail;
+        if (isPoster && artUrl && !seenPosterUrls.has(artUrl)) {
+          seenPosterUrls.add(artUrl);
+          return true;
+        }
+        return false;
+      }).slice(0, 15);
 
       const downloadedPosters = [];
       const posterChunks = [];
@@ -472,12 +506,19 @@ router.post('/:id/actualizar', async (req, res) => {
         insertArtwork.run(id, 'poster', p);
       }
 
-      // Backgrounds
-      const backgrounds = series.artworks.filter(art => 
-        art.type === 3 || 
-        String(art.type).toLowerCase() === 'background' || 
-        String(art.type).toLowerCase() === 'fanart'
-      );
+      // Backgrounds (solo únicos)
+      const seenBgUrls = new Set();
+      const backgrounds = series.artworks.filter(art => {
+        const isBg = art.type === 3 || 
+          String(art.type).toLowerCase() === 'background' || 
+          String(art.type).toLowerCase() === 'fanart';
+        const artUrl = art.image || art.thumbnail;
+        if (isBg && artUrl && !seenBgUrls.has(artUrl)) {
+          seenBgUrls.add(artUrl);
+          return true;
+        }
+        return false;
+      }).slice(0, 15);
 
       const downloadedBackgrounds = [];
       const bgChunks = [];
@@ -507,19 +548,32 @@ router.post('/:id/actualizar', async (req, res) => {
       }
     }
 
-    // Guardar el elenco (cast)
+    // Guardar el elenco (cast) único
     if (series.characters && Array.isArray(series.characters)) {
       const insertCast = db.prepare(`
         INSERT INTO series_cast (series_id, actor_name, character_name, image, sort_order)
         VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(series_id, actor_name) DO UPDATE SET
+          character_name = excluded.character_name,
+          image = excluded.image,
+          sort_order = excluded.sort_order
       `);
 
-      const characters = series.characters.slice(0, 12);
+      const seenActors = new Set();
+      const characters = series.characters.filter(char => {
+        const actorName = (char.personName || char.name || '').trim();
+        if (actorName && !seenActors.has(actorName.toLowerCase())) {
+          seenActors.add(actorName.toLowerCase());
+          return true;
+        }
+        return false;
+      }).slice(0, 12);
+
       const downloadedCast = [];
 
       await Promise.all(characters.map(async (char, i) => {
-        const actorName = char.personName || 'Actor Desconocido';
-        const charName = char.name || 'Personaje Desconocido';
+        const actorName = (char.personName || 'Actor Desconocido').trim();
+        const charName = (char.name || 'Personaje Desconocido').trim();
         const imgUrl = char.image || char.personImgURL;
         
         let localCastImgPath = null;
@@ -537,7 +591,7 @@ router.post('/:id/actualizar', async (req, res) => {
       }));
 
       for (const item of downloadedCast) {
-        insertCast.run(id, item.actorName, item.character_name || item.charName, item.localCastImgPath, item.sort);
+        insertCast.run(id, item.actorName, item.charName, item.localCastImgPath, item.sort);
       }
     }
 

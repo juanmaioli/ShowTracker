@@ -84,11 +84,13 @@ function initDb() {
     )
   `).run();
 
-  // Crear índices para optimizar búsquedas comunes
+  // Crear índices para optimizar búsquedas comunes y evitar duplicados
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_series ON episodes(series_id)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_watched ON episodes(watched)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_artworks_series ON artworks(series_id)`).run();
+  db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_artworks_series_image ON artworks(series_id, image)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_series_cast_series ON series_cast(series_id)`).run();
+  db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_series_cast_series_actor ON series_cast(series_id, actor_name)`).run();
   db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_api_consumption_date_type ON api_consumption(date, type)`).run();
 
   console.log('Base de datos inicializada correctamente.');

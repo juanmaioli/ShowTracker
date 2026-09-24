@@ -17,6 +17,19 @@ async function downloadSeriesImage(url, seriesId, subFolder = '') {
     const ext = path.extname(new URL(url).pathname) || '.jpg';
     const filename = `${seriesId}${ext}`;
     const destPath = path.join(destDir, filename);
+    const relativeUrl = subFolder ? `/img/${subFolder}/${filename}` : `/img/${filename}`;
+
+    // Si la imagen ya existe localmente y no está vacía, no descargarla nuevamente
+    if (fs.existsSync(destPath)) {
+      try {
+        const stat = fs.statSync(destPath);
+        if (stat.size > 0) {
+          return relativeUrl;
+        }
+      } catch (e) {
+        // En caso de error de lectura, intentar descargar
+      }
+    }
 
     // Asegurar que la carpeta existe
     if (!fs.existsSync(destDir)) {
