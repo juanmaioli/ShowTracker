@@ -153,21 +153,63 @@
   </h2>
   
   <div class="row row-cols-2 row-cols-sm-4 row-cols-md-6 row-cols-lg-8 g-3">
-    <% cast.forEach(actor => { %>
+    <% cast.forEach((actor, idx) => { %>
       <div class="col text-center">
-        <div class="position-relative mx-auto rounded-circle overflow-hidden shadow-sm border border-secondary border-opacity-25" style="width: 80px; height: 80px;">
-          <a href="<%= actor.image %>" target="_blank" title="Ver foto de <%= actor.actor_name %>" class="<%= actor.image !== '/img/cast-placeholder.svg' ? 'cursor-zoom' : '' %>">
-            <img src="<%= actor.image %>" class="w-100 h-100 object-fit-cover" alt="<%= actor.actor_name %>" onerror="this.src='/img/cast-placeholder.svg';">
-          </a>
+        <div class="position-relative mx-auto rounded-circle overflow-hidden shadow-sm border border-secondary border-opacity-25 cursor-pointer cast-item" style="width: 80px; height: 80px; transition: transform 0.2s ease;" onclick="openCastLightbox(<%= idx %>)" title="Ver foto de <%= actor.actor_name %>">
+          <img src="<%= actor.image %>" class="w-100 h-100 object-fit-cover" alt="<%= actor.actor_name %>" onerror="this.src='/img/cast-placeholder.svg';">
         </div>
-        <span class="fw-semibold small text-truncate d-block mt-2" title="<%= actor.actor_name %>">
+        <span class="fw-semibold small text-truncate d-block mt-2 cursor-pointer" onclick="openCastLightbox(<%= idx %>)" title="<%= actor.actor_name %>">
           <%= actor.actor_name %>
         </span>
-        <span class="small text-truncate d-block" title="<%= actor.character_name %>" style="font-size: 0.75rem;">
+        <span class="small text-truncate d-block text-secondary-emphasis" title="<%= actor.character_name %>" style="font-size: 0.75rem;">
           <%= actor.character_name %>
         </span>
       </div>
     <% }) %>
+  </div>
+</div>
+
+<!-- Lightbox Modal para Elenco (Cast) -->
+<div class="modal fade" id="castLightboxModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-transparent border-0 shadow-none text-white">
+      <div class="modal-body p-0 position-relative text-center d-flex flex-column align-items-center justify-content-center">
+        <!-- Botón para cerrar -->
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Cerrar" style="z-index: 1050; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"></button>
+        
+        <!-- Contenedor principal con navegación -->
+        <div class="d-flex align-items-center justify-content-between w-100" style="max-height: 85vh;">
+          <!-- Flecha izquierda -->
+          <button class="btn btn-link text-white p-2 border-0" id="castLightboxPrevBtn" onclick="navigateCastLightbox(-1)" style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 1040; text-decoration: none;">
+            ◀
+          </button>
+          
+          <!-- Imagen ampliada del actor con detalles -->
+          <div class="mx-auto overflow-hidden rounded-4 shadow-lg border border-secondary border-opacity-10 bg-black bg-opacity-75 d-flex flex-column align-items-center" style="max-width: 80%; max-height: 80vh;">
+            <img id="castLightboxImg" src="" alt="Foto de actor" class="img-fluid object-fit-contain" style="max-height: 60vh; transition: opacity 0.2s ease;" onerror="this.src='/img/cast-placeholder.svg';">
+            <div class="p-3 w-100 text-center border-top border-secondary border-opacity-25 bg-dark bg-opacity-75">
+              <h5 id="castLightboxActorName" class="fw-bold mb-1 text-white">Nombre del Actor</h5>
+              <p id="castLightboxCharName" class="text-white-50 small mb-0">Personaje</p>
+            </div>
+          </div>
+          
+          <!-- Flecha derecha -->
+          <button class="btn btn-link text-white p-2 border-0" id="castLightboxNextBtn" onclick="navigateCastLightbox(1)" style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 1040; text-decoration: none;">
+            ▶
+          </button>
+        </div>
+        
+        <!-- Barra de herramientas inferior -->
+        <div class="mt-3 bg-dark bg-opacity-75 py-2 px-4 rounded-pill border border-secondary border-opacity-25 d-flex align-items-center gap-3" style="backdrop-filter: blur(10px);">
+          <span id="castLightboxIndexLabel" class="text-white fw-medium fs-6">Actor X de Y</span>
+          <span class="text-white-50">|</span>
+          <a href="" id="castLightboxExternalLink" target="_blank" class="lightbox-external-link text-decoration-none d-inline-flex align-items-center gap-1 small text-white" title="Abrir en pestaña nueva">
+            <span>↗</span>
+            <span>Abrir foto original</span>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <% } %>
@@ -392,7 +434,7 @@
 </div>
 
 <script>
-  // Lógica de Galería Masonry y Lightbox
+  // Lógica de Galería Masonry y Lightbox de Artworks
   const artistImages = <%- (typeof allImages !== 'undefined' && allImages && allImages.length > 0) ? JSON.stringify(allImages.map(img => img.url)) : '[]' %>;
   let currentPhotoIndex = 0;
   let photoLightboxModalInstance = null;
@@ -450,7 +492,73 @@
     }, 150);
   }
 
-  // Teclado para modal
+  // Lógica de Lightbox de Elenco (Cast) Desconectado/Independiente
+  const castList = <%- (typeof cast !== 'undefined' && cast && cast.length > 0) ? JSON.stringify(cast.map(c => ({ actor_name: c.actor_name, character_name: c.character_name, image: c.image }))) : '[]' %>;
+  let currentCastIndex = 0;
+  let castLightboxModalInstance = null;
+
+  function openCastLightbox(index) {
+    if (!castList || castList.length === 0) return;
+    currentCastIndex = index;
+    const actor = castList[currentCastIndex];
+
+    const castImg = document.getElementById('castLightboxImg');
+    const actorName = document.getElementById('castLightboxActorName');
+    const charName = document.getElementById('castLightboxCharName');
+    const indexLabel = document.getElementById('castLightboxIndexLabel');
+    const externalLink = document.getElementById('castLightboxExternalLink');
+
+    if (castImg) castImg.src = actor.image || '/img/cast-placeholder.svg';
+    if (actorName) actorName.textContent = actor.actor_name;
+    if (charName) charName.textContent = actor.character_name || 'Personaje no especificado';
+    if (indexLabel) indexLabel.textContent = `Actor ${currentCastIndex + 1} de ${castList.length}`;
+    if (externalLink) externalLink.href = actor.image || '#';
+
+    if (!castLightboxModalInstance) {
+      const modalEl = document.getElementById('castLightboxModal');
+      castLightboxModalInstance = new bootstrap.Modal(modalEl);
+
+      modalEl.addEventListener('click', (e) => {
+        const isClickOnInteractive = e.target.closest('#castLightboxImg') ||
+                                     e.target.closest('#castLightboxPrevBtn') ||
+                                     e.target.closest('#castLightboxNextBtn') ||
+                                     e.target.closest('.rounded-pill') ||
+                                     e.target.closest('.bg-dark');
+        if (!isClickOnInteractive) {
+          castLightboxModalInstance.hide();
+        }
+      });
+    }
+
+    castLightboxModalInstance.show();
+  }
+
+  function navigateCastLightbox(direction) {
+    if (!castList || castList.length <= 1) return;
+
+    currentCastIndex = (currentCastIndex + direction + castList.length) % castList.length;
+    const actor = castList[currentCastIndex];
+
+    const castImg = document.getElementById('castLightboxImg');
+    const actorName = document.getElementById('castLightboxActorName');
+    const charName = document.getElementById('castLightboxCharName');
+    const indexLabel = document.getElementById('castLightboxIndexLabel');
+    const externalLink = document.getElementById('castLightboxExternalLink');
+
+    if (castImg) {
+      castImg.style.opacity = '0';
+      setTimeout(() => {
+        castImg.src = actor.image || '/img/cast-placeholder.svg';
+        if (actorName) actorName.textContent = actor.actor_name;
+        if (charName) charName.textContent = actor.character_name || 'Personaje no especificado';
+        if (indexLabel) indexLabel.textContent = `Actor ${currentCastIndex + 1} de ${castList.length}`;
+        if (externalLink) externalLink.href = actor.image || '#';
+        castImg.style.opacity = '1';
+      }, 150);
+    }
+  }
+
+  // Soporte de navegación por teclado para ambos modales
   document.addEventListener('keydown', (e) => {
     const photoModalEl = document.getElementById('photoLightboxModal');
     const isPhotoModalOpen = photoModalEl && photoModalEl.classList.contains('show');
@@ -462,6 +570,19 @@
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         navigateLightbox(-1);
+      }
+      return;
+    }
+
+    const castModalEl = document.getElementById('castLightboxModal');
+    const isCastModalOpen = castModalEl && castModalEl.classList.contains('show');
+    if (isCastModalOpen) {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateCastLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateCastLightbox(-1);
       }
     }
   });
@@ -868,9 +989,14 @@
     color: var(--bs-purple) !important;
     text-decoration: underline !important;
   }
-  #photoLightboxModal {
+  #photoLightboxModal,
+  #castLightboxModal {
     backdrop-filter: blur(8px);
     background-color: rgba(0, 0, 0, 0.4);
+  }
+  .cast-item:hover {
+    transform: scale(1.08);
+    border-color: var(--bs-purple) !important;
   }
 </style>
 
