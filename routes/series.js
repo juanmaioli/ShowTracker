@@ -243,7 +243,7 @@ router.post('/seguir', async (req, res) => {
           return true;
         }
         return false;
-      }).slice(0, 15);
+      });
 
       const downloadedPosters = [];
       const posterChunks = [];
@@ -285,7 +285,7 @@ router.post('/seguir', async (req, res) => {
           return true;
         }
         return false;
-      }).slice(0, 15);
+      });
 
       const downloadedBackgrounds = [];
       const bgChunks = [];
@@ -485,7 +485,7 @@ router.post('/:id/actualizar', async (req, res) => {
           return true;
         }
         return false;
-      }).slice(0, 15);
+      });
 
       const downloadedPosters = [];
       const posterChunks = [];
@@ -526,7 +526,7 @@ router.post('/:id/actualizar', async (req, res) => {
           return true;
         }
         return false;
-      }).slice(0, 15);
+      });
 
       const downloadedBackgrounds = [];
       const bgChunks = [];

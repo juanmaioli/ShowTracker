@@ -84,6 +84,14 @@ function initDb() {
     )
   `).run();
 
+  // Limpiar posibles duplicados previos antes de crear índices únicos
+  try {
+    db.prepare(`DELETE FROM artworks WHERE id NOT IN (SELECT MIN(id) FROM artworks GROUP BY series_id, image)`).run();
+    db.prepare(`DELETE FROM series_cast WHERE id NOT IN (SELECT MIN(id) FROM series_cast GROUP BY series_id, actor_name)`).run();
+  } catch (err) {
+    // Ignorar si las tablas aún no tienen registros
+  }
+
   // Crear índices para optimizar búsquedas comunes y evitar duplicados
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_series ON episodes(series_id)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_episodes_watched ON episodes(watched)`).run();
